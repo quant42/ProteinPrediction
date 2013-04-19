@@ -29,6 +29,6 @@ public abstract class AminoAcid {
      */
     public abstract String get3DStringRepresentation();
     
-    </editor-fold>
+    // </editor-fold>
     
 }

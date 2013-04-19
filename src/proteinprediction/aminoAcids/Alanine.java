@@ -5,7 +5,7 @@ package proteinprediction.aminoAcids;
  *
  * @author Yann
  */
-public class Alanin extends AminoAcid {
+public class Alanine extends AminoAcid {
 
     @Override
     public char getOneLetterCode() {
@@ -19,7 +19,7 @@ public class Alanin extends AminoAcid {
 
     @Override
     public String getAminoAcidFullName() {
-        return "Alanin";
+        return "Alanine";
     }
 
     @Override
