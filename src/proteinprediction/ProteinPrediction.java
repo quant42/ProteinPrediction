@@ -16,7 +16,8 @@ public class ProteinPrediction {
         AminoAcid[] as = new AminoAcid [] {
             new Alanine(), new Arginine(), new Asparagine(), new AsparticAcid(), new Cysteine(),
             new GlutamicAcid(), new Glutamine(), new Glycine(), new Histidine(), new Isoleucine(),
-            new Leucine(), new Lysine()
+            new Leucine(), new Lysine(), new Methionine(), new Phenylalanine(), new Proline(),
+            new Serine(), new Threonine(), new Tryptophan(), new Tyrosine()
         };
         
         for(int i = 0; i < as.length; i++) {
