@@ -14,7 +14,9 @@ public class ProteinPrediction {
     public static void main(String[] args) {
         
         AminoAcid[] as = new AminoAcid [] {
-            new Alanine(), new Arginine(), new Asparagine(), new AsparticAcid()
+            new Alanine(), new Arginine(), new Asparagine(), new AsparticAcid(), new Cysteine(),
+            new GlutamicAcid(), new Glutamine(), new Glycine(), new Histidine(), new Isoleucine(),
+            new Leucine(), new Lysine()
         };
         
         for(int i = 0; i < as.length; i++) {
