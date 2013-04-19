@@ -7,14 +7,7 @@ package proteinprediction.aminoAcids;
  */
 public abstract class AminoAcid {
     
-    // <editor-fold defaultstate="collapsed" desc="class attributes">
-    
-    /**
-     * 
-     */
-    private AminoAcid[] aminoAcids;
-    
-    // </editor-fold>
+    // <editor-fold defaultstate="collapsed" desc="abstract functions">
     
     /**
      * @return The one letter code of this aminoacid
@@ -36,17 +29,6 @@ public abstract class AminoAcid {
      */
     public abstract String get3DStringRepresentation();
     
-    /**
-     * @return An array with all AminoAcids
-     */
-    public AminoAcid[] getAllAminoAcids() {
-        return new AminoAcid[] {
-            new Alanin(), // etc.
-        };
-    }
-    
-    //public abstract boolean isHydrohil();
-    //public abstract boolean isHydrophob();
-    
+    </editor-fold>
     
 }

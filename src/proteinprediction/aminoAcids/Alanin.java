@@ -24,10 +24,6 @@ public class Alanin extends AminoAcid {
 
     @Override
     public String get3DStringRepresentation() {
-        return "       O\n"
-                + "CH3   ||\n"
-                + "   \\ /  \\\n"
-                + "    |    OH\n"
-                + "   NH2";
+        return "       O\nCH3   ||\n   \\ /  \\\n    |    OH\n   NH2";
     }
 }
