@@ -1,12 +1,8 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package proteinprediction;
 
 /**
  *
- * @author quant
+ * @author Yann
  */
 public class ProteinPrediction {
 
@@ -14,6 +10,9 @@ public class ProteinPrediction {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        // handle input parameters
+        proteinprediction.aminoAcids.Alanin ala = new proteinprediction.aminoAcids.Alanin();
+        System.out.println(ala.get3DStringRepresentation());
+        
     }
 }
