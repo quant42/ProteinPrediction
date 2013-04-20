@@ -26,4 +26,8 @@ public class Proline extends AminoAcid {
         return "     O\n    ||\n   /  \\\n/-|    OH\n\\-NH2";
     }
     
+    @Override
+    public double getHydrophathyIndex() {
+        return -1.6;
+    }
 }

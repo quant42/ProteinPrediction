@@ -25,4 +25,9 @@ public class Glycine extends AminoAcid {
     public String get3DStringRepresentation() {
         return "  O\n ||\n/  \\\n|   OH\nNH2";
     }
+    
+    @Override
+    public double getHydrophathyIndex() {
+        return -0.4;
+    }
 }

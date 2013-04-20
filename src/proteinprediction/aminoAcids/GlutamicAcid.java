@@ -25,4 +25,9 @@ public class GlutamicAcid extends AminoAcid {
     public String get3DStringRepresentation() {
         return "   O     O\n  ||    ||\n  /\\/\\ / \\\nHO    |   OH\n      NH2";
     }
+    
+    @Override
+    public double getHydrophathyIndex() {
+        return -3.5;
+    }
 }

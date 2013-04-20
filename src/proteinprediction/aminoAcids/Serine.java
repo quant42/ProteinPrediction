@@ -26,4 +26,8 @@ public class Serine extends AminoAcid {
         return "       O\n      ||\n  /\\ /  \\\nHO  |    OH\n    NH2";
     }
     
+    @Override
+    public double getHydrophathyIndex() {
+        return -0.8;
+    }
 }

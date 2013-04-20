@@ -26,4 +26,8 @@ public class Phenylalanine extends AminoAcid {
         return "          O\n         ||\n / \\\\/\\ /  \\\n||  |  |    NH2\n \\ //  OH";
     }
     
+    @Override
+    public double getHydrophathyIndex() {
+        return 2.8;
+    }
 }

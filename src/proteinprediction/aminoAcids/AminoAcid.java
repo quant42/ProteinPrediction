@@ -29,6 +29,11 @@ public abstract class AminoAcid {
      */
     public abstract String get3DStringRepresentation();
     
+    /**
+     * @return Returns the Hydrophathy Index of the amino acid
+     */
+    public abstract double getHydrophathyIndex();
+    
     // </editor-fold>
     
 }

@@ -25,4 +25,9 @@ public class Lysine extends AminoAcid {
     public String get3DStringRepresentation() {
         return "           O\nH2N       ||\n   \\/\\/\\ /  \\\n        |    OH\n       NH2";
     }
+    
+    @Override
+    public double getHydrophathyIndex() {
+        return -3.9;
+    }
 }

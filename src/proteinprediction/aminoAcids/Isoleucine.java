@@ -25,4 +25,9 @@ public class Isoleucine extends AminoAcid {
     public String get3DStringRepresentation() {
         return "     CH3  O\nH3C  |   ||\n   \\/ \\ /  \\\n       |    OH\n       NH2";
     }
+    
+    @Override
+    public double getHydrophathyIndex() {
+        return 4.5;
+    }
 }

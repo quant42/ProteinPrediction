@@ -26,4 +26,8 @@ public class Tryptophan extends AminoAcid {
         return " / \\\\         O\n||  |       ||\n \\ // \\  /\\ /  \\\n    \\  ||  |    OH\n    HN-    NH2";
     }
     
+    @Override
+    public double getHydrophathyIndex() {
+        return -0.9;
+    }
 }

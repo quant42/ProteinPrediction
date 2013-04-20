@@ -25,4 +25,9 @@ public class Glutamine extends AminoAcid {
     public String get3DStringRepresentation() {
         return "   O     O\n  ||    ||\n  /\\/\\ / \\\nNH2   |   OH\n      NH2";
     }
+    
+    @Override
+    public double getHydrophathyIndex() {
+        return -3.5;
+    }
 }

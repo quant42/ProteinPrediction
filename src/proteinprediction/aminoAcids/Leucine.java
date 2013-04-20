@@ -25,4 +25,9 @@ public class Leucine extends AminoAcid {
     public String get3DStringRepresentation() {
         return "          O\nH3C      ||\n   \\ /\\ /  \\\n    |  |    OH\n   NH2 NH2";
     }
+    
+    @Override
+    public double getHydrophathyIndex() {
+        return 3.8;
+    }
 }

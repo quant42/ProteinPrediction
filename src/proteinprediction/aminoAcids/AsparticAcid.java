@@ -25,4 +25,9 @@ public class AsparticAcid extends AminoAcid {
     public String get3DStringRepresentation() {
         return "       O\nO     ||\n\\\\/ \\/ \\\n |  |   OH\n OH NH2";
     }
+    
+    @Override
+    public double getHydrophathyIndex() {
+        return -3.5;
+    }
 }

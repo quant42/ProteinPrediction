@@ -26,4 +26,8 @@ public class Threonine extends AminoAcid {
         return "    OH   O\n    |   ||\n   / \\ /  \\\nH3C   |    OH\n      NH2";
     }
     
+    @Override
+    public double getHydrophathyIndex() {
+        return -0.7;
+    }
 }

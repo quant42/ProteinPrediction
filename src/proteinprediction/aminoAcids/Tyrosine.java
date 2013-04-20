@@ -26,4 +26,8 @@ public class Tyrosine extends AminoAcid {
         return "              O\n             ||\n        / \\ /  \\\n    / \\\\   |    OH\n   ||  |   NH2\n  / \\ //\nHO";
     }
     
+    @Override
+    public double getHydrophathyIndex() {
+        return -1.3;
+    }
 }

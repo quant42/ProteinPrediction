@@ -26,4 +26,9 @@ public class Arginine extends AminoAcid {
     public String get3DStringRepresentation() {
         return "    NH         O\n    ||        ||\n   /  \\ /\\/\\ / \\\nNH2    N    |   OH\n       H    NH2";
     }
+    
+    @Override
+    public double getHydrophathyIndex() {
+        return -4.5;
+    }
 }

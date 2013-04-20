@@ -25,4 +25,9 @@ public class Cysteine extends AminoAcid {
     public String get3DStringRepresentation() {
         return "       O\n      ||\n  /\\ /  \\\nHS  |    OH\n    NH2";
     }
+    
+    @Override
+    public double getHydrophathyIndex() {
+        return 2.5;
+    }
 }

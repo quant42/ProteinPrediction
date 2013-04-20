@@ -26,4 +26,8 @@ public class Methionine extends AminoAcid {
         return "           O\n    S     ||\n   / \\/\\ /  \\\nH3C     |   OH\n        NH2";
     }
     
+    @Override
+    public double getHydrophathyIndex() {
+        return 1.9;
+    }
 }

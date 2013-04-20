@@ -26,4 +26,8 @@ public class Valine extends AminoAcid {
         return "    CH3  O\n    |   ||\n   / \\ /  \\\nCH3   |    OH\n      NH2";
     }
     
+    @Override
+    public double getHydrophathyIndex() {
+        return 4.2;
+    }
 }

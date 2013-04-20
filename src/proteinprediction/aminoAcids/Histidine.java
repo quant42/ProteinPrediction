@@ -25,4 +25,9 @@ public class Histidine extends AminoAcid {
     public String get3DStringRepresentation() {
         return "           O\n  N       ||\n//  \\ /\\ / \\\n \\  ||  |   OH\n HN /   NH2";
     }
+    
+    @Override
+    public double getHydrophathyIndex() {
+        return -3.2;
+    }
 }

@@ -26,4 +26,9 @@ public class Alanine extends AminoAcid {
     public String get3DStringRepresentation() {
         return "       O\nCH3   ||\n   \\ /  \\\n    |    OH\n   NH2";
     }
+    
+    @Override
+    public double getHydrophathyIndex() {
+        return 1.8;
+    }
 }
