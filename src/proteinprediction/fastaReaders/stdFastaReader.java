@@ -18,6 +18,7 @@ public class stdFastaReader extends fastaReader {
         while((line = br.readLine()) != null) {
             
         }
+        return result;
     }
     
 }
