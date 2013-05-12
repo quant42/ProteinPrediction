@@ -46,7 +46,7 @@ public class ProteinPredictionWekaConverter {
         o.createNewFile();
         OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(o));
         
-        out.write("@RELATION protein interaction\n");
+        out.write("@RELATION proteinInteraction\n");
         out.write("\n");
         out.write("@ATTRIBUTE proteinId STRING\n");
         out.write("@ATTRIBUTE taxaId STRING\n");
