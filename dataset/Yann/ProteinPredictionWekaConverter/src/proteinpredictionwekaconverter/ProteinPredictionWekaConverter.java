@@ -56,7 +56,7 @@ public class ProteinPredictionWekaConverter {
         out.write("@ATTRIBUTE pdbId STRING\n");
         out.write("@ATTRIBUTE pdbSplit STRING\n");
         out.write("@ATTRIBUTE as" + i + "Seq STRING\n");
-        out.write("@ATTRIBUTE stat" + j + " {U,L,H,1,2}\n");
+        out.write("@ATTRIBUTE stat" + j + " {U,L,H,I,1,2}\n");
         out.write("\n");
         out.write("@DATA\n");
         out.write("\n");
@@ -84,7 +84,7 @@ public class ProteinPredictionWekaConverter {
                 String wAS = as.substring(z, z + i);
                 String wSS = struct.substring(z, z + i);
                 char c = wSS.charAt(j);
-                if(c == ' ') c = '?';
+                if(c == ' ') continue;
                 
                 out.write("\'" + proteinId + "\',\'" + taxaId + "\',\'" + taxaName + "\',\'" + ncbiTaxaId + "\',\'" + regna + "\',\'" + pdbId
                         + "\',\'" + pdbSplit + "\',\'" + wAS + "\',\'" + c + "\'\n");
