@@ -41,6 +41,7 @@ public class ProteinPredictionWekaConverter {
         }
         br.close();
         // </editor-fold>
+        // <editor-fold defaultstate="collapsed" desc="print out">
         
         File o = new File("summary" + i + "-" + j + ".arff");
         o.createNewFile();
@@ -52,14 +53,13 @@ public class ProteinPredictionWekaConverter {
         out.write("@ATTRIBUTE taxaId STRING\n");
         out.write("@ATTRIBUTE taxaName STRING\n");
         out.write("@ATTRIBUTE ncbiTaxaId NUMERIC\n");
-        out.write("@ATTRIBUTE regna STRING\n");
+        out.write("@ATTRIBUTE regna {vertebrates, bacteria, human, fungi, mammals, plants, archaea, rodents}\n");
         out.write("@ATTRIBUTE pdbId STRING\n");
         out.write("@ATTRIBUTE pdbSplit STRING\n");
         out.write("@ATTRIBUTE as" + i + "Seq STRING\n");
         out.write("@ATTRIBUTE stat" + j + " {U,L,H,I,1,2}\n");
         out.write("\n");
         out.write("@DATA\n");
-        out.write("\n");
         
         for(Data x: r) {
             header = x.header.trim();
@@ -93,8 +93,11 @@ public class ProteinPredictionWekaConverter {
         }
         
         out.close();
+        
+        // </editor-fold>
     }
     
+    // <editor-fold defaultstate="collapsed" desc="helper class">
     static class Data {
         public String header;
         public String as;
@@ -110,4 +113,5 @@ public class ProteinPredictionWekaConverter {
             return header + "\n" + as + "\n" + align + "\n" + struct;
         }
     }
+    // </editor-fold>
 }

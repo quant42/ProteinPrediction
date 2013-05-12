@@ -4,7 +4,7 @@
 @ATTRIBUTE taxaId STRING
 @ATTRIBUTE taxaName STRING
 @ATTRIBUTE ncbiTaxaId NUMERIC
-@ATTRIBUTE regna STRING
+@ATTRIBUTE regna {vertebrates, bacteria, human, fungi, mammals, plants, archaea, rodents}
 @ATTRIBUTE pdbId STRING
 @ATTRIBUTE pdbSplit STRING
 @ATTRIBUTE as3Seq STRING
