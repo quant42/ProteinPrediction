@@ -10,10 +10,8 @@ import java.util.LinkedList;
 public class ProteinPredictionWekaConverter {
 
     public static void main(String[] args) throws Exception {
-        // <editor-fold defaultstate="collapsed" desc="read in">
+        // <editor-fold defaultstate="collapsed" desc="read in impf">
         File f = new File(args[0]);
-        int i = Integer.parseInt(args[1]);
-        int j = Integer.parseInt(args[2]);
         BufferedReader br = new BufferedReader(new FileReader(f));
         String line = new String(), header = new String(), as = new String(), align = new String();
         LinkedList<Data> r = new LinkedList<Data>();
@@ -41,9 +39,24 @@ public class ProteinPredictionWekaConverter {
         }
         br.close();
         // </editor-fold>
-        // <editor-fold defaultstate="collapsed" desc="print out">
-        
-        File o = new File("summary" + i + "-" + j + ".arff");
+        // <editor-fold defaultstate="collapsed" desc="open out pipe">
+        File o = new File("summary.arff");
+        o.createNewFile();
+        OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(o));
+        // </editor-fold>
+        // <editor-fold defaultstate="collapsed" desc="read in arff">
+        f = new File(args[1]);
+        br = new BufferedReader(new FileReader(f));
+        while((line == br.readLine()) != null) {
+            
+        }
+        br.close();
+        // </editor-fold>
+        // <editor-fold defaultstate="collapsed" desc="close out pipe">
+        out.close();
+        // </editor-fold>
+        // <editor-fold defaultstate="collapsed" desc="print new arff file">
+        File o = new File("summary.arff");
         o.createNewFile();
         OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(o));
         
@@ -56,8 +69,8 @@ public class ProteinPredictionWekaConverter {
         out.write("@ATTRIBUTE regna {vertebrates, bacteria, human, fungi, mammals, plants, archaea, rodents}\n");
         out.write("@ATTRIBUTE pdbId STRING\n");
         out.write("@ATTRIBUTE pdbSplit STRING\n");
-        out.write("@ATTRIBUTE as" + i + "Seq STRING\n");
-        out.write("@ATTRIBUTE stat" + j + " {U,L,H,I,1,2}\n");
+        out.write("@ATTRIBUTE asSeq {A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z}\n");
+        out.write("@ATTRIBUTE stat {U,L,H,I,1,2}\n");
         out.write("\n");
         out.write("@DATA\n");
         
@@ -80,8 +93,8 @@ public class ProteinPredictionWekaConverter {
             
             // MDQETVGNVVLLAIVTLISVVQNGFFAHKVEHESRTQNGRSFQRTGTLAFERVYTANQNCVDAYPTFLAVLWSAGLLCSQVPAAFAGLMYLFVRQKYFVGYLGERTQSTPGYIFGKRIILFLFLMSVAGIFNYYLIFFFGSDFENYIATISTTISPLLLIP
             // 11111111111HHHHHHHHHHHHHHHHHH2222222222222222222222222222HHHHHHHHHHHHHHHHHH1111111HHHHHHHHHHHHHHHHH2222222222222HHHHHHHHHHHHHHHH11111111111111111111UUUUUUUUUUUUU
-            for(int z = 0; z < as.length() - i + 1; z++) {
-                String wAS = as.substring(z, z + i);
+            for(int z = 0; z < align.length() - i + 1; z++) {
+                String wAS = align.substring(z, z + i);
                 String wSS = struct.substring(z, z + i);
                 char c = wSS.charAt(j);
                 if(c == ' ') continue;
@@ -91,9 +104,7 @@ public class ProteinPredictionWekaConverter {
             }
             
         }
-        
         out.close();
-        
         // </editor-fold>
     }
     
