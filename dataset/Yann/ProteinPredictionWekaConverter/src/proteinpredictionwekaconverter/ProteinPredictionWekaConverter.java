@@ -2,6 +2,8 @@ package proteinpredictionwekaconverter;
 
 import java.io.*;
 import java.util.LinkedList;
+import java.util.HashMap;
+import java.util.Set;
 
 /**
  *
@@ -10,13 +12,12 @@ import java.util.LinkedList;
 public class ProteinPredictionWekaConverter {
 
     public static void main(String[] args) throws Exception {
-        // <editor-fold defaultstate="collapsed" desc="read in">
-        File f = new File(args[0]);
-        int i = Integer.parseInt(args[1]);
-        int j = Integer.parseInt(args[2]);
+        File f = new File(args[0]); // fasta
+        File g = new File(args[1]); // arff
+        // <editor-fold defaultstate="collapsed" desc="read in fasta">
         BufferedReader br = new BufferedReader(new FileReader(f));
         String line = new String(), header = new String(), as = new String(), align = new String();
-        LinkedList<Data> r = new LinkedList<Data>();
+        HashMap<String, FastaClass> dict = new HashMap<String, FastaClass>();
         int stat = 0;
         while((line = br.readLine()) != null) {
             if(stat == 1) {
@@ -26,7 +27,7 @@ public class ProteinPredictionWekaConverter {
                 align = line;
                 stat = 3;
             } else if(stat == 3) {
-                r.add(new Data(header, as, align, line));
+                dict.put(header.split("\\|")[2], new FastaClass(header, as, align, line));
                 header = new String(); as = new String(); align = new String();
                 stat = 0;
             } else {
@@ -41,70 +42,59 @@ public class ProteinPredictionWekaConverter {
         }
         br.close();
         // </editor-fold>
-        // <editor-fold defaultstate="collapsed" desc="print out">
-        
-        File o = new File("summary" + i + "-" + j + ".arff");
-        o.createNewFile();
+        // <editor-fold defaultstate="collapsed" desc="open stream">
+        File o = new File("summary.arff");
         OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(o));
-        
-        out.write("@RELATION proteinInteraction\n");
-        out.write("\n");
-        out.write("@ATTRIBUTE proteinId STRING\n");
-        out.write("@ATTRIBUTE taxaId STRING\n");
-        out.write("@ATTRIBUTE taxaName STRING\n");
-        out.write("@ATTRIBUTE ncbiTaxaId NUMERIC\n");
-        out.write("@ATTRIBUTE regna {vertebrates, bacteria, human, fungi, mammals, plants, archaea, rodents}\n");
-        out.write("@ATTRIBUTE pdbId STRING\n");
-        out.write("@ATTRIBUTE pdbSplit STRING\n");
-        out.write("@ATTRIBUTE as" + i + "Seq STRING\n");
-        out.write("@ATTRIBUTE stat" + j + " {U,L,H,I,1,2}\n");
-        out.write("\n");
-        out.write("@DATA\n");
-        
-        for(Data x: r) {
-            header = x.header.trim();
-            as = x.as;
-            align = x.align;
-            String struct = x.struct;
-            
-            String splitter[] = header.split("\\|");
-            
-            // >sp|Q1XA76|ACCN2_CHICK|NCBI_TaxID=9031(vertebrates)|PDB:3HGC:A
-            String proteinId = splitter[1];
-            String taxaId = splitter[2].split("_")[0];
-            String taxaName = splitter[2].split("_")[1];
-            String ncbiTaxaId = splitter[3].split("=")[1].split("\\(")[0];
-            String regna = splitter[3].split("\\(")[1].substring(0, splitter[3].split("\\(")[1].length() - 1);
-            String pdbId = splitter[4].split(":")[1];
-            String pdbSplit = splitter[4].split(":")[2];
-            
-            // MDQETVGNVVLLAIVTLISVVQNGFFAHKVEHESRTQNGRSFQRTGTLAFERVYTANQNCVDAYPTFLAVLWSAGLLCSQVPAAFAGLMYLFVRQKYFVGYLGERTQSTPGYIFGKRIILFLFLMSVAGIFNYYLIFFFGSDFENYIATISTTISPLLLIP
-            // 11111111111HHHHHHHHHHHHHHHHHH2222222222222222222222222222HHHHHHHHHHHHHHHHHH1111111HHHHHHHHHHHHHHHHH2222222222222HHHHHHHHHHHHHHHH11111111111111111111UUUUUUUUUUUUU
-            for(int z = 0; z < as.length() - i + 1; z++) {
-                String wAS = as.substring(z, z + i);
-                String wSS = struct.substring(z, z + i);
-                char c = wSS.charAt(j);
-                if(c == ' ') continue;
-                
-                out.write("\'" + proteinId + "\',\'" + taxaId + "\',\'" + taxaName + "\',\'" + ncbiTaxaId + "\',\'" + regna + "\',\'" + pdbId
-                        + "\',\'" + pdbSplit + "\',\'" + wAS + "\',\'" + c + "\'\n");
+        // </editor-fold>
+        // <editor-fold defaultstate="collapsed" desc="read arff and output new arf">
+        BufferedReader r = new BufferedReader(new FileReader(g));
+        stat = 0;
+        while((line = r.readLine()) != null) {
+            String trimLine = line.trim();
+            if(stat == 0) {
+                // as long as @DATA didn't appeared, copy
+                if(trimLine.equalsIgnoreCase("@DATA")) {
+                    out.write("@ATTRIBUTE stat {N,H,L}\n");
+                    out.write("@DATA\n");
+                    stat = 1;
+                } else {
+                    out.write(line + "\n");
+                }
+            } else if(stat == 1) {
+                if(trimLine.startsWith("%")) {
+                    // comment
+                    out.write(line);
+                } else {
+                    // "coding"
+                    String toSearch = trimLine.split(",")[0];
+                    int p = toSearch.lastIndexOf("_");
+                    String name = toSearch.substring(0, p);
+                    int pos = Integer.parseInt(toSearch.substring(p + 1));
+                    FastaClass fc = dict.get(name);
+                    //String struct = fc.struct.replaceAll(" ", "");
+                    String struct = fc.struct;
+                    char x = struct.charAt(pos);
+                    if(x != 'L' &&  x != 'H') x = 'N';
+                    out.write(line + "," + x + "\n");
+                }
             }
-            
         }
-        
+        r.close();
+        // </editor-fold>
+        // <editor-fold defaultstate="collapsed" desc="close stream">
         out.close();
-        
         // </editor-fold>
     }
     
-    // <editor-fold defaultstate="collapsed" desc="helper class">
-    static class Data {
+    // <editor-fold defaultstate="collapsed" desc="helper fasta class">
+    
+    static class FastaClass {
         public String header;
         public String as;
         public String align;
         public String struct;
         
-        public Data(String header, String as, String align, String struct) {
+        public FastaClass(String header, String as, String align, String struct) {
             this.header = header; this.as = as; this.align = align; this.struct = struct;
         }
         
@@ -113,5 +103,6 @@ public class ProteinPredictionWekaConverter {
             return header + "\n" + as + "\n" + align + "\n" + struct;
         }
     }
+    
     // </editor-fold>
 }
