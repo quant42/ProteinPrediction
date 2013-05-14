@@ -101,12 +101,12 @@ public class DatasetGenerator {
             classLabels = new FastVector();
             classLabels.addElement("L");
             classLabels.addElement("H");
-         //   classLabels.addElement(CLASS_LABEL_UNKNOWN);
-          classLabels.addElement("U");
+            classLabels.addElement(CLASS_LABEL_UNKNOWN);
+         /* classLabels.addElement("U");
             classLabels.addElement("I");
             classLabels.addElement("1");
             classLabels.addElement("2");
-            classLabels.addElement(" ");
+            classLabels.addElement(" "); */
         }
         return classLabels;
     }
