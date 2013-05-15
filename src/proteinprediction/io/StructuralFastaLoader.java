@@ -1,6 +1,7 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * This class provides loader for fasta files combined with structural 
+ * information
+ * License: GPL
  */
 package proteinprediction.io;
 
@@ -12,8 +13,9 @@ import java.util.HashMap;
 import proteinprediction.rawdata.StructuralFastaSeq;
 
 /**
- *
- * @author wei
+ * This class provides loader for fasta files combined with structural 
+ * information
+ * @author Shen Wei
  */
 public class StructuralFastaLoader {
    
