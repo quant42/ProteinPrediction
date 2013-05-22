@@ -8,11 +8,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import proteinprediction.rawdata.StructuralFastaSeq;
 import weka.core.Attribute;
+import weka.core.AttributeStats;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -74,7 +77,75 @@ public class DatasetGenerator {
      * @throws IOException 
      */
     public void generateDataset() throws IOException {
-        
+        this.generateDataset(false);
+    }
+    
+    /**
+     * for test purpose 
+     * @param args input_path output_path db_path
+     */
+    public static void main(String[] args) {
+        try {
+            DatasetGenerator dg = new DatasetGenerator(
+                new File(args[0]),
+                new File(args[1]),
+                new File(args[2]));
+            if (args.length > 3 && args[3].equals("true"))
+            {
+                //balance classes
+                dg.generateDataset(true);
+            } else {
+                dg.generateDataset();
+            }
+        } catch(IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Usage: DataGenerator <input.arff> "
+                    + "<output.arff.gz> <structural_fasta>"
+                    + " [balance_classes=false]");
+        }
+    }
+
+    /**
+     * get a vector of class labels
+     * @return 
+     */
+    private static FastVector getClassLabels() {
+        if (classLabels == null) {
+            classLabels = new FastVector();
+            classLabels.addElement("L");
+            classLabels.addElement("H");
+        }
+        return classLabels;
+    }
+
+    /**
+     * get class label of a residue in the given protein
+     * @param protein Uniprot name of the protein
+     * @param pos index of the residue, starts from 0
+     * @return class label to the residue, or null if class label in unknown
+     */
+    private String getResidueClassLabel(String protein, int pos) {
+        StructuralFastaSeq sseq = this.structuralFastaDB.get(protein);
+        if (sseq == null) return null;
+        String label = ""+sseq.getResidueStructure(pos);
+        if (getClassLabels().contains(label))
+            return label;
+        return null;
+    }
+
+    /**
+     * get class Attribute of the new dataset
+     * @return 
+     */
+    private Attribute getClassAttribute() {
+        if (classAttr == null) {
+            classAttr = new Attribute("CLASS", getClassLabels());
+        }
+        return classAttr;
+    }
+
+    private void generateDataset(boolean balanceClasses) throws IOException {
         Pattern pattern = Pattern.compile("^(.*)_(\\d+)$");
        
         Instances dataset = new Instances(
@@ -112,66 +183,70 @@ public class DatasetGenerator {
         //remove instances whose class label is missing
         dataset.deleteWithMissingClass();
         
+        //balance classes with over sampling
+        if (balanceClasses) {
+            AttributeStats stats = dataset.attributeStats(dataset.classIndex());
+            int[] classCounts = stats.nominalCounts;
+            
+            //get maximum number of instances of a class
+            int maxCount = 0;
+            for (int count : classCounts) {
+                if (count > maxCount) maxCount = count;
+            }
+            
+            //try to balance classes
+            
+            //step 1, get remaining instances to be generated
+            int[] remain = new int[classCounts.length];
+            for (int classId = 0; classId < classCounts.length; classId++)
+            {
+                int count = classCounts[classId];
+                if(count == maxCount) {
+                    remain[classId] = 0;
+                    continue;
+                }
+                remain[classId] = maxCount - count;
+            }
+            //step 2, prepare datasets with instances from one class
+            Instances oneClassDatasets[] = new Instances[classCounts.length]; 
+            for (int classId = 0; classId < classCounts.length; classId++)
+            {
+                oneClassDatasets[classId] = new Instances(dataset, 0);
+            }
+            //add instances
+            Enumeration enm = dataset.enumerateInstances();
+            while(enm.hasMoreElements()) {
+                Instance inst = (Instance)enm.nextElement();
+                int classIdx = (int)inst.classValue();
+                oneClassDatasets[classIdx].add(inst);
+            }
+            
+            //step 3, generate remaining instances
+            for (int klass = 0; klass < classCounts.length; klass++) {
+                if (remain[klass] == 0) continue;
+                int count = classCounts[klass];
+                int folds = (int) Math.ceil(maxCount / (double)count) - 1;
+                Instances set = oneClassDatasets[klass];
+                set.randomize(new Random());
+                
+                Enumeration enumerate = set.enumerateInstances();
+                while (remain[klass] > 0) {
+                    Instance inst = (Instance) enumerate.nextElement();
+                    int Folds = folds;
+                    while (Folds > 0 &&  remain[klass] > 0) {
+                        dataset.add(inst);
+                        Folds--;
+                        remain[klass]--;
+                    }
+                }
+            }
+        }
+        
         //save changed data set
         ArffSaver saver = new ArffSaver();
         saver.setCompressOutput(true);
         saver.setFile(output);
         saver.setStructure(dataset);
         saver.writeBatch();
-    }
-    
-    /**
-     * for test purpose 
-     * @param args input_path output_path db_path
-     */
-    public static void main(String[] args) {
-        if (args.length == 0) return;
-        try {
-            DatasetGenerator dg = new DatasetGenerator(
-                new File(args[0]),
-                new File(args[1]),
-                new File(args[2]));
-            dg.generateDataset();
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * get a vector of class labels
-     * @return 
-     */
-    private static FastVector getClassLabels() {
-        if (classLabels == null) {
-            classLabels = new FastVector();
-            classLabels.addElement("L");
-            classLabels.addElement("H");
-        }
-        return classLabels;
-    }
-
-    /**
-     * get class label of a residue in the given protein
-     * @param protein Uniprot name of the protein
-     * @param pos index of the residue, starts from 0
-     * @return class label to the residue, or null if class label in unknown
-     */
-    private String getResidueClassLabel(String protein, int pos) {
-        StructuralFastaSeq sseq = this.structuralFastaDB.get(protein);
-        String label = ""+sseq.getResidueStructure(pos);
-        if (getClassLabels().contains(label))
-            return label;
-        return null;
-    }
-
-    /**
-     * get class Attribute of the new dataset
-     * @return 
-     */
-    private Attribute getClassAttribute() {
-        if (classAttr == null) {
-            classAttr = new Attribute("CLASS", getClassLabels());
-        }
-        return classAttr;
     }
 }
