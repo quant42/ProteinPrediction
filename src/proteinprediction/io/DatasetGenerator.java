@@ -20,13 +20,15 @@ import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ArffSaver;
+import proteinprediction.ProgramEntryPoint;
+import proteinprediction.ProgramSettings;
 
 /**
  * Generate data set from given arff file and sequence files
  * for training a predictor of TML and TMH
  * @author Shen Wei
  */
-public class DatasetGenerator {
+public class DatasetGenerator implements ProgramEntryPoint {
     /**
      * input arff file
      */
@@ -84,7 +86,8 @@ public class DatasetGenerator {
      * for test purpose 
      * @param args input_path output_path db_path
      */
-    public static void main(String[] args) {
+    @Override
+    public int run(String[] args) {
         try {
             DatasetGenerator dg = new DatasetGenerator(
                 new File(args[0]),
@@ -98,12 +101,37 @@ public class DatasetGenerator {
                 dg.generateDataset();
             }
         } catch(IOException e) {
-            e.printStackTrace();
+            return ProgramSettings.PROGRAM_EXIT_IOERROR;
         } catch (Exception e) {
-            System.err.println("Usage: DataGenerator <input.arff> "
-                    + "<output.arff.gz> <structural_fasta>"
-                    + " [balance_classes=false]");
+            return ProgramSettings.PROGRAM_EXIT_MALFORMED_ARGS;
         }
+        return ProgramSettings.PROGRAM_EXIT_NORMAL;
+    }
+    
+    /**
+     * returns the usage of this entry point
+     */
+    @Override
+    public String getUsageAndHelp() {
+        return "Usage: DataGenerator <input.arff> "
+            + "<output.arff.gz> <structural_fasta>"
+            + " [balance_classes=false]";
+    }
+    
+    /**
+     * @return A little description of this program mode
+     */
+    @Override
+    public String getShortDescription() {
+        return "read in an arff and a fasta file and outputs an dataset file!";
+    }
+
+    /**
+     * @return The name of this program mode
+     */
+    @Override
+    public String getCommandLineArgumentName() {
+        return "DataGenerator";
     }
 
     /**
@@ -249,4 +277,5 @@ public class DatasetGenerator {
         saver.setStructure(dataset);
         saver.writeBatch();
     }
+
 }
