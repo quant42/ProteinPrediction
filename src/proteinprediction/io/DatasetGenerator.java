@@ -60,6 +60,11 @@ public class DatasetGenerator implements ProgramEntryPoint {
     //public static final String CLASS_LABEL_UNKNOWN = "X";
     
     /**
+     * A simple DatasetGenerator that does nothing!
+     */
+    public DatasetGenerator() {}
+    
+    /**
      * 
      * @param in
      * @param out

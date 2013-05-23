@@ -14,7 +14,7 @@ public class ProteinPrediction {
      * "program entry points"
      */
     private static ProgramEntryPoint[] pEPs = new ProgramEntryPoint[] {
-        
+        new proteinprediction.io.DatasetGenerator()
     };
     
     /**
