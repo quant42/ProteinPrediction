@@ -13,5 +13,7 @@ public abstract class Predictor extends Thread {
     public abstract void setInput();
     public abstract void calculatePrediction();
     public abstract void getPredictedResult();
+    public abstract void importFromFile();
+    public abstract void writeToFile(java.io.File f);
     
 }
