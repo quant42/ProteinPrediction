@@ -103,7 +103,7 @@ public class NeuronalNetwork {
             if(stopErr > popul.getFirst().errLvl) {
                 break;
             }
-            System.out.println(popul.getFirst().errLvl + " " + flex); // IMPROVMENT OF CODE!!!
+//            System.out.println(popul.getFirst().errLvl + " " + flex); // IMPROVMENT OF CODE!!!
             // acclimatize flex
             for(CalculationThread x : popul) {
                 if(Math.abs(popul.getFirst().errLvl - x.errLvl) < 0.001) {
@@ -272,8 +272,8 @@ public class NeuronalNetwork {
      * @return the output of this neuron
      */
     public double funct(double input) {
-        return Math.tanh(input);
-        //return 1 / (1 + Math.exp(input));
+        //return Math.tanh(input);
+        return 1 / (1 + Math.exp(input));
     }
 
     /**
@@ -346,30 +346,22 @@ public class NeuronalNetwork {
      * sequence)
      */
     public static void main(String[] args) {
-        NeuronalNetwork n = new NeuronalNetwork(new int[]{3, 5, 3, 1});
+        NeuronalNetwork n = new NeuronalNetwork(new int[]{2, 3, 3, 1});
         LinkedList<Pair<double[], double[]>> dataset = new LinkedList<Pair<double[], double[]>>();
-        dataset.add(new Pair<double[], double[]>(new double[]{-1, -1, -1}, new double[]{1}));
-        dataset.add(new Pair<double[], double[]>(new double[]{-1, -1,  1}, new double[]{-1}));
-        dataset.add(new Pair<double[], double[]>(new double[]{-1,  1, -1}, new double[]{-1}));
-        dataset.add(new Pair<double[], double[]>(new double[]{-1,  1,  1}, new double[]{-1}));
-        dataset.add(new Pair<double[], double[]>(new double[]{ 1, -1, -1}, new double[]{-1}));
-        dataset.add(new Pair<double[], double[]>(new double[]{ 1, -1,  1}, new double[]{-1}));
-        dataset.add(new Pair<double[], double[]>(new double[]{ 1,  1, -1}, new double[]{-1}));
-        dataset.add(new Pair<double[], double[]>(new double[]{ 1,  1,  1}, new double[]{1}));
-        n.train(dataset, 1E-6, 100);
-//        for(int i = 0; i < n.net.length; i++) {
-//            for(int j = 0; j < n.net[i].length; j++) {
-//                System.out.print(n.net[i][j] + "\t");
-//            }
-//            System.out.println();
-//        }
-        System.out.println(n.predict(new double[]{-1, -1, -1})[0]);
-        System.out.println(n.predict(new double[]{-1, -1,  1})[0]);
-        System.out.println(n.predict(new double[]{-1,  1, -1})[0]);
-        System.out.println(n.predict(new double[]{-1,  1,  1})[0]);
-        System.out.println(n.predict(new double[]{ 1, -1, -1})[0]);
-        System.out.println(n.predict(new double[]{ 1, -1,  1})[0]);
-        System.out.println(n.predict(new double[]{ 1,  1, -1})[0]);
-        System.out.println(n.predict(new double[]{ 1,  1,  1})[0]);
+        dataset.add(new Pair<double[], double[]>(new double[]{ 0,  0}, new double[]{1}));
+        dataset.add(new Pair<double[], double[]>(new double[]{ 0,  1}, new double[]{0}));
+        dataset.add(new Pair<double[], double[]>(new double[]{ 1,  0}, new double[]{0}));
+        dataset.add(new Pair<double[], double[]>(new double[]{ 1,  1}, new double[]{1}));
+        n.train(dataset, 0.1, 2000);
+        for(int i = 0; i < n.net.length; i++) {
+            for(int j = 0; j < n.net[i].length; j++) {
+                System.out.print(n.net[i][j] + "\t");
+            }
+            System.out.println();
+        }
+        System.out.println(n.predict(new double[]{ 0,  0})[0]);
+        System.out.println(n.predict(new double[]{ 0,  1})[0]);
+        System.out.println(n.predict(new double[]{ 1,  0})[0]);
+        System.out.println(n.predict(new double[]{ 1,  1})[0]);
     }
 }
