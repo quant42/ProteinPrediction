@@ -10,7 +10,7 @@ import java.util.LinkedList;
  *
  * @author Yann
  */
-public class NeuronalNetwork {
+public class NeuronalNetwork implements Serializable {
 
     /**
      * The net defining the neuronal network
@@ -345,7 +345,7 @@ public class NeuronalNetwork {
      * @param args the command line args (don't have any effects on the program
      * sequence)
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         NeuronalNetwork n = new NeuronalNetwork(new int[]{2, 3, 3, 1});
         LinkedList<Pair<double[], double[]>> dataset = new LinkedList<Pair<double[], double[]>>();
         dataset.add(new Pair<double[], double[]>(new double[]{ 0,  0}, new double[]{1}));
@@ -363,5 +363,11 @@ public class NeuronalNetwork {
         System.out.println(n.predict(new double[]{ 0,  1})[0]);
         System.out.println(n.predict(new double[]{ 1,  0})[0]);
         System.out.println(n.predict(new double[]{ 1,  1})[0]);
+        n.saveNeuronalNetwork(new File("/home/quant/Desktop/test.nnw"));
+        NeuronalNetwork n_ = NeuronalNetwork.getNeuronalNetwork(new File("/home/quant/Desktop/test.nnw"));
+        System.out.println(n_.predict(new double[]{ 0,  0})[0]);
+        System.out.println(n_.predict(new double[]{ 0,  1})[0]);
+        System.out.println(n_.predict(new double[]{ 1,  0})[0]);
+        System.out.println(n_.predict(new double[]{ 1,  1})[0]);
     }
 }
