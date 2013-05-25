@@ -52,11 +52,11 @@ public class NeuronalNetwork {
      * run this algorithm more than once inputspec: pair<inputdata[],
      * outputdata[]>
      */
-    public void train(LinkedList<Pair<double[], double[]>> trainingSet) {
+    public void train(LinkedList<Pair<double[], double[]>> trainingSet, double stopErr, long maxIterations) {
         // training data
         int maxPopulation = 100;    // this is also the number of threads used; don't choose a too high number, Java don't support numberous threads
         int startingPopulation = 5; // the number of Threads that started calculation, should be lower than maxPopuloation
-        int cycles = 50;            // number of cycles to calc
+        int flex = 3;               // number of minimal randomized values
         // neuronal network population (starting population)
         LinkedList<NeuronalNetwork> population = new LinkedList<>();
         for (int i = 0; i < startingPopulation; i++) {
@@ -64,11 +64,11 @@ public class NeuronalNetwork {
         }
         // for each generation
         LinkedList<CalculationThread> popul = new LinkedList<>();
-        for (int generation = 0; generation < cycles; generation++) {
+        for (int generations = 0; generations < maxIterations; generations++) {
             // eval new generation
             popul.clear();
             for(NeuronalNetwork n : population) {
-                CalculationThread c = new CalculationThread(n, trainingSet);
+                CalculationThread c = new CalculationThread(n, trainingSet, flex);
                 c.start();
                 popul.add(c);
             }
@@ -88,24 +88,34 @@ public class NeuronalNetwork {
                     return (diff == 0) ? 0 : (diff > 0) ? 1 : -1;
                 }
             });
-            System.out.println(popul.getFirst().errLvl);
+            // stopErr > popul.getFirst().errLvl?
+            if(stopErr > popul.getFirst().errLvl) {
+                break;
+            }
+//            System.out.println(popul.getFirst().errLvl + " " + flex); // DEBUG!!!
+            // acclimatize flex
+            for(CalculationThread x : popul) {
+                if(Math.abs(popul.getFirst().errLvl - x.errLvl) < 0.001) {
+                    flex++;
+                } else {
+                    break;
+                }
+            }
             // generate new population
             population.clear();
-            // the first startingPopulation stay in
-            for(int i = 0; i < startingPopulation; i++) {
-                population.add(popul.get(i).n);
-            }
+            // the first is "good", let him stay
+            population.add(popul.getFirst().n);
             // input the rest
-            for(int i = 0; i < ((popul.size() * 2 > maxPopulation) ? maxPopulation : popul.size() * 2) - 5; i++) {
+            for(int i = 0; i < ((popul.size() * 2 > maxPopulation) ? maxPopulation : popul.size() * 2) - 1; i++) {
                 int k = 0, l = 0;
-                while(Math.random() > 0.25) {
+                while(Math.random() < 0.25) {
                     k++;
                     if(k == popul.size()) {
                         k = 0;
                         break;
                     }
                 }
-                while(Math.random() > 0.25) {
+                while(Math.random() < 0.25) {
                     l++;
                     if(l == popul.size()) {
                         l = 0;
@@ -131,10 +141,12 @@ public class NeuronalNetwork {
         public NeuronalNetwork n;
         public LinkedList<Pair<double[], double[]>> trainingSet;
         public double errLvl;
+        public long number = 1;
 
-        public CalculationThread(NeuronalNetwork n, LinkedList<Pair<double[], double[]>> trainingSet) {
+        public CalculationThread(NeuronalNetwork n, LinkedList<Pair<double[], double[]>> trainingSet, int number) {
             this.n = n.clone();
             this.trainingSet = trainingSet;
+            this.number = number;
         }
 
         @Override
@@ -142,7 +154,7 @@ public class NeuronalNetwork {
             // randomizer
             Random rand = new Random();
             // randomly change this neuronal network
-            for (int i = 0; i < (n.getNetworkSize() >> 4) + 1; i++) {
+            for (int i = 0; i < number; i++) {
                 // neuron to change
                 int x = rand.nextInt(n.net.length);
                 int y = rand.nextInt(n.net[x].length);
@@ -153,7 +165,6 @@ public class NeuronalNetwork {
             for (Pair<double[], double[]> z : trainingSet) {
                 errLevel += calcErr(z.r, n.predict(z.l));
             }
-            // save result
             this.errLvl = errLevel;
         }
     }
@@ -246,8 +257,8 @@ public class NeuronalNetwork {
      * @return the output of this neuron
      */
     public double funct(double input) {
-        //return Math.tanh(input);
-        return 1 / (1 + Math.exp(input));
+        return Math.tanh(input);
+        //return 1 / (1 + Math.exp(input));
     }
 
     /**
@@ -320,24 +331,22 @@ public class NeuronalNetwork {
      * sequence)
      */
     public static void main(String[] args) {
-        NeuronalNetwork n = new NeuronalNetwork(new int[]{2, 5, 3, 1});
+        NeuronalNetwork n = new NeuronalNetwork(new int[]{2, 5, 3, 1, 1});
         LinkedList<Pair<double[], double[]>> dataset = new LinkedList<Pair<double[], double[]>>();
-        dataset.add(new Pair<double[], double[]>(new double[]{0, 0}, new double[]{0}));
-        dataset.add(new Pair<double[], double[]>(new double[]{0, 1}, new double[]{1}));
-        dataset.add(new Pair<double[], double[]>(new double[]{1, 0}, new double[]{1}));
-        dataset.add(new Pair<double[], double[]>(new double[]{1, 1}, new double[]{0}));
-        for (double x = 0; x < 10; x++) {
-            n.train(dataset);
-        }
+        dataset.add(new Pair<double[], double[]>(new double[]{-1, -1}, new double[]{-1}));
+        dataset.add(new Pair<double[], double[]>(new double[]{-1, 1}, new double[]{1}));
+        dataset.add(new Pair<double[], double[]>(new double[]{1, -1}, new double[]{1}));
+        dataset.add(new Pair<double[], double[]>(new double[]{1, 1}, new double[]{-1}));
+        n.train(dataset, 0.1, 1000);
 //        for(int i = 0; i < n.net.length; i++) {
 //            for(int j = 0; j < n.net[i].length; j++) {
 //                System.out.print(n.net[i][j] + "\t");
 //            }
 //            System.out.println();
 //        }
-        System.out.println(n.predict(new double[]{0, 0})[0]);
-        System.out.println(n.predict(new double[]{1, 0})[0]);
-        System.out.println(n.predict(new double[]{0, 1})[0]);
+        System.out.println(n.predict(new double[]{-1, -1})[0]);
+        System.out.println(n.predict(new double[]{1, -1})[0]);
+        System.out.println(n.predict(new double[]{-1, 1})[0]);
         System.out.println(n.predict(new double[]{1, 1})[0]);
     }
 }
