@@ -15,5 +15,16 @@ public class ProgramSettings {
     public static final int PROGRAM_EXIT_IOERROR = 4;
     
     // </editor-fold>
+    // <editor-fold defaultstate="collapsed" desc="predictor settings">
+    
+    public static final String PREDICTION_ATTRIBUTE_NAME = "prediction";
+    public static final String PREDICTION_ATTRIBUTE_ACCURACY09 = "predictionAcc09";
+    public static final String PREDICTION_ATTRIBUTE_ACCURACYAZ = "predictionAccAZ";
+    public static final String PREDICTION_ATTRIBUTE_ACCURACYaZ = "predictionAccaZ";
+    public static final String PREDICTION_CLASS_NO_TML_OR_TMH = "N";
+    public static final String PREDICTION_CLASS_TML = "L";
+    public static final String PREDICTION_CLASS_TMH = "H";
+    
+    // </editor-fold>
     
 }

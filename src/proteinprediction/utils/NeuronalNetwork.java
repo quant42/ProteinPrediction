@@ -122,14 +122,14 @@ public class NeuronalNetwork implements Serializable {
             // input the rest
             for(int i = 0; i < ((popul.size() * 2 > maxPopulation) ? maxPopulation : popul.size() * 2) - 1; i++) {
                 int k = 0, l = 0;
-                while(Math.random() < 0.25) {
+                while(Math.random() < 0.5) {
                     k++;
                     if(k == popul.size()) {
                         k = 0;
                         break;
                     }
                 }
-                while(Math.random() < 0.25) {
+                while(Math.random() < 0.5) {
                     l++;
                     if(l == popul.size()) {
                         l = 0;
