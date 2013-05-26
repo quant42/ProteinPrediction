@@ -56,7 +56,7 @@ public class NeuronalNetwork implements Serializable {
         // training data
         int maxPopulation = 100;    // this is also the number of threads used; don't choose a too high number, Java don't support numberous threads
         int startingPopulation = 5; // the number of Threads that started calculation, should be lower than maxPopuloation
-        int flex = 3;               // number of minimal randomized values
+        int flex = 3;            // number of minimal randomized values
         // save "best"
         NeuronalNetwork masterNet = this.clone();
         double masterErr = 0;
@@ -107,11 +107,9 @@ public class NeuronalNetwork implements Serializable {
             // acclimatize flex
             for(CalculationThread x : popul) {
                 if(Math.abs(popul.getFirst().errLvl - x.errLvl) < 0.001) {
-                    if(flex >= ((this.getNetworkSize() + 1) << 1)) {
-                        break;
-                    }
                     flex++;
                 } else {
+                    flex = (flex >> 1) + 1;
                     break;
                 }
             }
@@ -120,7 +118,7 @@ public class NeuronalNetwork implements Serializable {
             // include master
             population.add(masterNet.clone());
             // input the rest
-            for(int i = 0; i < ((popul.size() * 2 > maxPopulation) ? maxPopulation : popul.size() * 2) - 1; i++) {
+            for(int i = 0; i < (((popul.size() << 1) > maxPopulation) ? maxPopulation : (popul.size() << 1)) - 1; i++) {
                 int k = 0, l = 0;
                 while(Math.random() < 0.5) {
                     k++;
@@ -353,21 +351,21 @@ public class NeuronalNetwork implements Serializable {
         dataset.add(new Pair<double[], double[]>(new double[]{ 1,  0}, new double[]{0}));
         dataset.add(new Pair<double[], double[]>(new double[]{ 1,  1}, new double[]{1}));
         n.train(dataset, 0.1, 2000);
-        for(int i = 0; i < n.net.length; i++) {
-            for(int j = 0; j < n.net[i].length; j++) {
-                System.out.print(n.net[i][j] + "\t");
-            }
-            System.out.println();
-        }
+//        for(int i = 0; i < n.net.length; i++) {
+//            for(int j = 0; j < n.net[i].length; j++) {
+//                System.out.print(n.net[i][j] + "\t");
+//            }
+//            System.out.println();
+//        }
         System.out.println(n.predict(new double[]{ 0,  0})[0]);
         System.out.println(n.predict(new double[]{ 0,  1})[0]);
         System.out.println(n.predict(new double[]{ 1,  0})[0]);
         System.out.println(n.predict(new double[]{ 1,  1})[0]);
-        n.saveNeuronalNetwork(new File("/home/quant/Desktop/test.nnw"));
-        NeuronalNetwork n_ = NeuronalNetwork.getNeuronalNetwork(new File("/home/quant/Desktop/test.nnw"));
-        System.out.println(n_.predict(new double[]{ 0,  0})[0]);
-        System.out.println(n_.predict(new double[]{ 0,  1})[0]);
-        System.out.println(n_.predict(new double[]{ 1,  0})[0]);
-        System.out.println(n_.predict(new double[]{ 1,  1})[0]);
+//        n.saveNeuronalNetwork(new File("/tmp/test.nnw"));
+//        NeuronalNetwork n_ = NeuronalNetwork.getNeuronalNetwork(new File("/tmp/test.nnw"));
+//        System.out.println(n_.predict(new double[]{ 0,  0})[0]);
+//        System.out.println(n_.predict(new double[]{ 0,  1})[0]);
+//        System.out.println(n_.predict(new double[]{ 1,  0})[0]);
+//        System.out.println(n_.predict(new double[]{ 1,  1})[0]);
     }
 }

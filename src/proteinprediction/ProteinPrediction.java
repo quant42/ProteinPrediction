@@ -14,7 +14,7 @@ public class ProteinPrediction {
      * "program entry points"
      */
     private static ProgramEntryPoint[] pEPs = new ProgramEntryPoint[] {
-        new proteinprediction.utils.DatasetGenerator()
+        new proteinprediction.utils.DatasetGenerator(), new proteinprediction.prediction.PredictionEntryPoint()
     };
     
     /**
@@ -67,7 +67,7 @@ public class ProteinPrediction {
      * prints an help message
      */
     public static void printHelp() {
-        System.err.println("help message of: " + ProteinPrediction.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+        System.err.println("help message of: " + ProteinPrediction.class.getProtectionDomain().getCodeSource().getLocation().getFile());
         System.err.println("currently supported program modes:");
         for(int i = 0; i < pEPs.length; i++) {
             System.err.println(" " + pEPs[i].getCommandLineArgumentName() + " - " + pEPs[i].getShortDescription());
