@@ -6,6 +6,8 @@ package proteinprediction;
  */
 public class ProgramSettings {
     
+    public static final String DATA_FOLDER = "ppData";
+    
     // <editor-fold defaultstate="collapsed" desc="error quitting codes">
     
     public static final int PROGRAM_EXIT_NORMAL = 0;
