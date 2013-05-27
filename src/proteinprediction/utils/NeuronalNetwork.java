@@ -64,12 +64,12 @@ public class NeuronalNetwork implements Serializable {
             masterErr += calcErr(z.r, masterNet.predict(z.l));
         }
         // neuronal network population (starting population)
-        LinkedList<NeuronalNetwork> population = new LinkedList<>();
+        LinkedList<NeuronalNetwork> population = new LinkedList<NeuronalNetwork>();
         for (int i = 0; i < startingPopulation; i++) {
             population.add(this.clone());
         }
         // for each generation
-        LinkedList<CalculationThread> popul = new LinkedList<>();
+        LinkedList<CalculationThread> popul = new LinkedList<CalculationThread>();
         for (int generations = 0; generations < maxIterations; generations++) {
             // eval new generation
             popul.clear();
