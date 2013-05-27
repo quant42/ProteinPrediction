@@ -2,6 +2,10 @@ package proteinprediction;
 
 import java.nio.channels.FileLock;
 import java.io.*;
+import java.io.*;
+import java.nio.channels.FileLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This is the main class of our ProteinPredictor. Bacause our proteinpredictor
@@ -29,16 +33,23 @@ public class ProteinPrediction {
      */
     public static void main(String[] args) {
         // check for prev instance
+        FileLock fileLock = null;
         try {
-            FileLock f = new RandomAccessFile(new File(ProgramSettings.DATA_FOLDER), "rw").getChannel().tryLock();
-            if (f == null) {
-                throw new Exception();
+            fileLock = new RandomAccessFile(new File(proteinprediction.ProgramSettings.DATA_FOLDER), "rw").getChannel().tryLock();
+        } catch(Exception e) {
+            new File(proteinprediction.ProgramSettings.DATA_FOLDER).mkdir();
+            try {
+                fileLock = new RandomAccessFile(new File(ProgramSettings.DATA_FOLDER), "rw").getChannel().tryLock();
+            } catch (Exception ex) {
+                System.err.printf("ERROR: Couldn't lock/find project-folder!!!");
+                System.exit(1);
             }
-        } catch (Exception e) {
-            System.err.println("Error locking project folder! A previou死 instance of this application might still locking it.");
+        }
+        if(fileLock == null) {
+            System.err.println("Error: A previous instance of this javaprogram is already using the data folder! Please close it ...");
             System.exit(1);
         }
-        // parse args
+        // parse
         try {
             if (args[0].equalsIgnoreCase("help")) {
                 printHelp();
