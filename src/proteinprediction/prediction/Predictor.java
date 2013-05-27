@@ -1,6 +1,6 @@
 package proteinprediction.prediction;
 
-import java.io.File;
+import java.io.*;
 
 /**
  * This is an abstract class defining an predictor for the TML/TMH problem.
@@ -27,7 +27,7 @@ public abstract class Predictor {
      * Train your prediction method according to that arffFile (the weka's classes
      * could help opening this file)
      */
-    public abstract void train(File arffFile);
+    public abstract void train(File arffFile) throws IOException;
     
     /**
      * The predictor should return a File, with its predicted values for the
@@ -42,6 +42,6 @@ public abstract class Predictor {
      * AZ: The prediction accuracy is given in a range from A to Z (A = lowest, B, ..., Z = highest)
      * aZ: The prediction accuracy is given in a range from a to Z (a = lowest, b, ..., z, A, B, C, ..., Z=highest)
      */
-    public abstract File predict(File arffFile);
+    public abstract File predict(File arffFile) throws IOException;
     
 }
