@@ -15,7 +15,7 @@ public class PredictionEntryPoint implements ProgramEntryPoint {
     /**
      * register your predicter here
      */
-    Predictor[] predictors = new Predictor[] {
+    public static Predictor[] predictors = new Predictor[] {
         new NeuronalNetworkPredictor()
     };
     
@@ -34,22 +34,19 @@ public class PredictionEntryPoint implements ProgramEntryPoint {
                 pThreads[i] = new PredictorThread(predictors[i], new File(ProgramSettings.DATA_FOLDER + "/method" + i + ".dat"), input);
                 pThreads[i].start();
             }
-            // wait for each preditor to finish
+            // wait for each preditor to finish and save output files
+            File[] files = new File[predictors.length];
             for(int i = 0; i < pThreads.length; i++) {
                 pThreads[i].join();
                 if(pThreads[i].output == null) {
                     System.err.println("Prediction method " + i + " throws returned a nullobject!");
                     throw new IOException();
                 }
+                files[i] = pThreads[i].output;
             }
             // merge output files
             NeuronalNetworkPredictionsMixer n = new NeuronalNetworkPredictionsMixer();
             n.loadNeuronalNetwork(new File(ProgramSettings.DATA_FOLDER + "/mixMethodNet.dat"));
-            // generate Folder Array
-            File[] files = new File[predictors.length];
-            for(int i = 0; i < predictors.length; i++) {
-                files[i] = pThreads[i].output;
-            }
             // save
             n.mergePredictionData(files, output);
         } catch(IOException e) {

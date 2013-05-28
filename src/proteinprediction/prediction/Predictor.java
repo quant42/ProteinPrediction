@@ -27,7 +27,7 @@ public abstract class Predictor {
      * Train your prediction method according to that arffFile (the weka's classes
      * could help opening this file)
      */
-    public abstract void train(File arffFile) throws IOException;
+    public abstract void train(File arffFile, File whereToSafe) throws IOException;
     
     /**
      * The predictor should return a File, with its predicted values for the

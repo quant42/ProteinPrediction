@@ -1,11 +1,7 @@
 package proteinprediction;
 
-import java.nio.channels.FileLock;
-import java.io.*;
 import java.io.*;
 import java.nio.channels.FileLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This is the main class of our ProteinPredictor. Bacause our proteinpredictor
@@ -21,7 +17,8 @@ public class ProteinPrediction {
      * simultaneously "program entry points"
      */
     private static ProgramEntryPoint[] pEPs = new ProgramEntryPoint[]{
-        new proteinprediction.utils.DatasetGenerator(), new proteinprediction.prediction.PredictionEntryPoint()
+        new proteinprediction.utils.DatasetGenerator(), new proteinprediction.prediction.PredictionEntryPoint(),
+        new proteinprediction.prediction.TrainingEntryPoint()
     };
 
     /**
