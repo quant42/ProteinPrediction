@@ -14,14 +14,14 @@ public abstract class Predictor {
      * Let the predictor load its data out of an predictordataFile!
      * See also saveTrainingFile
      */
-    public abstract void loadTrainingFile(File f);
+    public abstract void loadModel(File f);
     
     /**
      * save the data the predicter needs to a file; Note, an predictor that loads
      * it's data from a file should predict he same way/with the same accuracy
      * as the predictor that safes this data.
      */
-    public abstract void saveTrainingFile(File f);
+    public abstract void saveModel(File f);
     
     /**
      * Train your prediction method according to that arffFile (the weka's classes

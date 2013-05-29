@@ -16,7 +16,10 @@ public class PredictionEntryPoint implements ProgramEntryPoint {
      * register your predicter here
      */
     public static Predictor[] predictors = new Predictor[] {
-        new NeuronalNetworkPredictor()
+        new NeuronalNetworkPredictor(),
+        new ADTreePredictor(),
+        new NaiveBayesPredictor(),
+        new SVMPredictor()
     };
     
     /**
@@ -99,7 +102,7 @@ public class PredictionEntryPoint implements ProgramEntryPoint {
         @Override
         public void run() {
             try {
-                predictor.loadTrainingFile(trainingFile);
+                predictor.loadModel(trainingFile);
                 output = predictor.predict(arffInputFile);
             } catch(Exception e) {
                 synchronized(sync) {

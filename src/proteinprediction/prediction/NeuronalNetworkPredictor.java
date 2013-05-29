@@ -3,6 +3,7 @@ package proteinprediction.prediction;
 import java.io.File;
 import java.io.IOException;
 import proteinprediction.utils.NeuronalNetwork;
+import weka.core.Instances;
 
 /**
  *
@@ -16,7 +17,7 @@ public class NeuronalNetworkPredictor extends Predictor {
     NeuronalNetwork n;
     
     @Override
-    public void loadTrainingFile(File f) {
+    public void loadModel(File f) {
         try {
             n = NeuronalNetwork.getNeuronalNetwork(f);
         } catch (Exception ex) {
@@ -27,7 +28,7 @@ public class NeuronalNetworkPredictor extends Predictor {
     }
 
     @Override
-    public void saveTrainingFile(File f) {
+    public void saveModel(File f) {
         try {
             n.saveNeuronalNetwork(f);
         } catch (Exception ex) {
