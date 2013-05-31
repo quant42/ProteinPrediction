@@ -34,6 +34,23 @@ public class StructuralFastaLoader {
         String line;
         StructuralFastaSeq sseq = null;
         
+        //check how many lines does an entry have
+        int lines = -1;
+        while ( (line = reader.readLine()) != null) {
+            if (lines == -1 && line.startsWith(">")) {
+                lines = 1;
+                continue;
+            }
+            
+            if (lines > 0 && line.startsWith(">")) {
+                break;
+            }
+            
+            lines++;
+        }
+        reader.close();
+        reader = new BufferedReader(new FileReader(db));
+        
         while ( (line = reader.readLine()) != null ) {
             //skip empty line
             if (line.length() == 0) continue;
@@ -41,9 +58,16 @@ public class StructuralFastaLoader {
             if (line.charAt(0) == '>') {
                 sseq = new StructuralFastaSeq(line);
                 map.put(sseq.uniprotName, sseq);
-                sseq.uniprotSeq = reader.readLine();
-                sseq.setPDBTMSeq(reader.readLine());
-                sseq.setStructuralSeq(reader.readLine());
+                if (lines == 4) {
+                    sseq.uniprotSeq = reader.readLine();
+                    sseq.setPDBTMSeq(reader.readLine());
+                    sseq.setStructuralSeq(reader.readLine());
+                } else if (lines == 3) {
+                    sseq.setPDBTMSeq(reader.readLine());
+                    sseq.setStructuralSeq(reader.readLine());
+                    //no uniprot seq
+                    sseq.uniprotSeq = "";
+                }
             }
         }
         
