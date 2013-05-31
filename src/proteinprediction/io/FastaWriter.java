@@ -1,6 +1,7 @@
 package proteinprediction.io;
 
 import java.io.*;
+import weka.core.Instances;
 
 /**
  *
@@ -18,6 +19,13 @@ public class FastaWriter {
      */
     public FastaWriter(File f) throws IOException {
         this.bf = new BufferedWriter(new FileWriter(f));
+    }
+    
+    /**
+     * Write a dataset and its prediction in the file
+     */
+    public void writeDataset(Instances dataset, double[] prediction) {
+        dataset.
     }
     
     /**
