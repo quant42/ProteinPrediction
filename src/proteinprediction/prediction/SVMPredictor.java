@@ -11,7 +11,9 @@ import weka.classifiers.functions.LibSVM;
  * @author Shen Wei
  */
 public class SVMPredictor  extends WekaPredictor{
-    public static final String OUTPUT_FILE = "SVM_result.arff.gz";
+    public static final String OUTPUT_FILE = "LibSVM.model";
+    
+    public static final String RESULT_ATTR = "LibSVM";
     
     public SVMPredictor() {
         super();
@@ -30,5 +32,6 @@ public class SVMPredictor  extends WekaPredictor{
             "-seed", "1"
         };
         this.outputFileName = OUTPUT_FILE;
+        this.resultAttrName = RESULT_ATTR;
     }
 }

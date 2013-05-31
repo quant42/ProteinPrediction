@@ -12,12 +12,14 @@ import weka.classifiers.bayes.NaiveBayes;
  */
 public class NaiveBayesPredictor extends WekaPredictor {
     
-    public static final String OUTPUT_FILE = "NaiveBayes_result.arff.gz";
+    public static final String OUTPUT_FILE = "NaiveBayes.model";
+    public static final String RESULT_ATTR = "NaiveBayes";
     
     public NaiveBayesPredictor() {
         super();
         this.classifier =  new NaiveBayes();
         this.trainOptions = new String[]{};
         this.outputFileName = OUTPUT_FILE;
+        this.resultAttrName = RESULT_ATTR;
     }
 }

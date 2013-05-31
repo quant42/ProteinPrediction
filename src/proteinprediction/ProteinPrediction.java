@@ -18,7 +18,7 @@ public class ProteinPrediction {
      */
     private static ProgramEntryPoint[] pEPs = new ProgramEntryPoint[]{
         new proteinprediction.utils.DatasetGenerator(), new proteinprediction.prediction.PredictionEntryPoint(),
-        new proteinprediction.prediction.TrainingEntryPoint()
+        //new proteinprediction.prediction.TrainingEntryPoint()
     };
 
     /**

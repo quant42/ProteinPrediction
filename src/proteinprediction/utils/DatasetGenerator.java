@@ -27,6 +27,12 @@ import proteinprediction.ProgramSettings;
  * @author Shen Wei
  */
 public class DatasetGenerator implements ProgramEntryPoint {
+    
+    /**
+     * name of class attribute
+     */
+    public static final String CLASS_ATTR_NAME = "TMH_TML";
+    
     /**
      * input arff file
      */
@@ -71,15 +77,59 @@ public class DatasetGenerator implements ProgramEntryPoint {
     @Override
     public int run(String[] args) {
         try {
+            File inputFile = new File(args[0]);
+            File strFasta = new File(args[1]);
+            File outDir = new File(args[2]);
+            
+            if (outDir.exists() && !outDir.isDirectory()) {
+                throw new IllegalArgumentException("Output directory is not a directory!");
+            } else if (!outDir.exists()) {
+                outDir.mkdir();
+            }
+            
             DatasetGenerator dg = new DatasetGenerator(
-                new File(args[0]),
-                new File(args[2]));
-            File output = new File(args[1]);
+                inputFile,
+                strFasta);
             Instances dataset = dg.generateDataset();
+            
+            //select features over balanced full data set
+            Instances fullBalanced = DatasetPreprocessor.getBalancedDataset(
+                    dataset, true, dataset.numAttributes() - 1);
+            String indices = DatasetPreprocessor.featureIndicesStringSelection(
+                    fullBalanced, fullBalanced.numAttributes()-1, 300);
+            
+            //reduce full unbalanced dataset
+            dataset = DatasetPreprocessor.selectFeatures(dataset, indices);
+            
+            //generate subsets
+            String weights = "1";
+            boolean balance = true;
+            
+            if (args.length > 4) {
+                weights = args[4];
+            }
+            
+            if (args.length > 5) {
+                balance = Boolean.parseBoolean(args[5]);
+            }
+            
+            Instances[] subsets = DatasetPreprocessor.splitDataset(
+                    dataset, DatasetPreprocessor.getWeights(weights));
             ArffSaver saver = new ArffSaver();
-            saver.setFile(output);
-            saver.setInstances(dataset);
-            saver.writeBatch();
+            for (int i = 0; i < subsets.length; i++) {
+                Instances subset = subsets[i];
+                if (balance) {
+                    subset = DatasetPreprocessor.getBalancedDataset(
+                            subset, 
+                            true, 
+                            dataset.numAttributes()-1);
+                }
+                
+                saver.resetOptions();
+                saver.setFile(new File(outDir, "dataset_" + (i+1)+".arff"));
+                saver.setInstances(subset);
+                saver.writeBatch();
+            }
             
         } catch(IOException e) {
             return ProgramSettings.PROGRAM_EXIT_IOERROR;
@@ -94,9 +144,15 @@ public class DatasetGenerator implements ProgramEntryPoint {
      */
     @Override
     public String getUsageAndHelp() {
-        return "Usage: DataGenerator <input.arff> "
-            + "<output.arff.gz> <structural_fasta>"
-            + " [balance_classes=false]";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Usage: DatasetGenerator <input.arff> ");
+        sb.append("<structural_fasta> <output_directory> ");
+        sb.append(" [subsets=1] [comma_separated_weights] [balance_classes=true]\n");
+        
+        sb.append("Example:\n");
+        sb.append("DataGenerator tmps.arff imp_structure.fasta output/ \\\n"
+                + "              3 0.64,0.2,0.16 true");
+        return sb.toString();
     }
     
     /**
@@ -119,7 +175,7 @@ public class DatasetGenerator implements ProgramEntryPoint {
      * get a vector of class labels
      * @return 
      */
-    private static FastVector getClassLabels() {
+    public static FastVector getClassLabels() {
         if (classLabels == null) {
             classLabels = new FastVector();
             classLabels.addElement("L");
@@ -147,9 +203,9 @@ public class DatasetGenerator implements ProgramEntryPoint {
      * get class Attribute of the new dataset
      * @return 
      */
-    private Attribute getClassAttribute() {
+    public static Attribute getClassAttribute() {
         if (classAttr == null) {
-            classAttr = new Attribute("CLASS", getClassLabels());
+            classAttr = new Attribute(CLASS_ATTR_NAME, getClassLabels());
         }
         return classAttr;
     }
@@ -190,7 +246,7 @@ public class DatasetGenerator implements ProgramEntryPoint {
         
         //remove unwanted attributes: class and ID_POS
         dataset.deleteAttributeAt(oldClassIdx);
-        dataset.deleteAttributeAt(0);
+        dataset.deleteStringAttributes();
         
         //remove instances whose class label is missing
         dataset.deleteWithMissingClass();

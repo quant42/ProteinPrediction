@@ -7,8 +7,14 @@ package proteinprediction.utils;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Random;
+import org.apache.commons.lang3.StringUtils;
+import weka.attributeSelection.AttributeSelection;
+import weka.attributeSelection.GainRatioAttributeEval;
+import weka.attributeSelection.Ranker;
+import weka.core.Attribute;
 import weka.core.AttributeStats;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -204,79 +210,6 @@ public class DatasetPreprocessor {
         return splitDataset(dataset, weights);
     }
     
-    public static CrossValidation generateCVSets(
-            Instances dataset, 
-            boolean equalSize,
-            int classIndex)
-    {
-        Instances[] isoSets = getOneClassedDatasets(dataset, classIndex);
-        Random rand = new Random();
-        System.err.println("Split in equal size? " + equalSize);
-        //allocate new data sets
-        Instances subsets[] = new Instances[3];
-        for (int i = 0; i < subsets.length; i++) {
-            //copy structure
-            subsets[i] = new Instances(dataset, -1);
-        }
-        CrossValidation cv = new CrossValidation(
-                subsets[0],
-                subsets[1],
-                subsets[2]);
-        
-        //generate data sets
-        for (Instances isoSet : isoSets) {
-            
-            isoSet.randomize(rand);
-            Enumeration enm = isoSet.enumerateInstances();
-            
-            //set size limit to each subset
-            int sizes[] = new int[3];
-            int added[] = new int[3];
-            final int totalSize = isoSet.numInstances();
-            int sum = 0;
-            for (int i = 0;i < sizes.length; i++)
-            {
-                if (equalSize) {
-                    sizes[i] = totalSize / 3;
-                    sum += sizes[i] * 3;
-                    continue;
-                } else {
-                    if (i==CrossValidation.MEMBER_OF_TRAIN_SET) {
-                        sizes[i] = (int) (0.64 * totalSize);
-                    } else if (i==CrossValidation.MEMBER_OF_VALIDATION_SET) {
-                        sizes[i] = (int) (0.16 * totalSize);
-                    } else {
-                        sizes[i] = (int) (0.2 * totalSize);
-                    }
-                }
-                sum += sizes[i];
-            }
-            
-            int remain = totalSize - sum;
-            while(remain > 0) {
-                sizes[remain % 3]++;
-                remain--;
-            }
-            
-            for (int size : sizes) {
-                System.err.println("Size: " + size);
-            }
-            
-            while (enm.hasMoreElements()) {
-                Instance inst = (Instance) enm.nextElement();
-                
-                for (int i = 0;i < subsets.length; i++) {
-                    if (added[i] < sizes[i]) {
-                        subsets[i].add(inst);
-                        added[i]++;
-                        break;
-                    }
-                }
-            }
-        }
-        return cv;
-    }
-    
     /**
      * select features from data set with given attribute indices
      * @param dataset
@@ -331,36 +264,7 @@ public class DatasetPreprocessor {
                saver.setInstances(dataset);
                saver.writeBatch();
            } else if (cmd.equals("cvset")) {
-               String otrainset = args[2];
-               String otestset = args[3];
-               String ovalidationset = args[4];
-               boolean equalSize = true;
-               if (args.length > 5) {
-                   equalSize = Boolean.parseBoolean(args[5]);
-               }
-               Instances dataset = new Instances(new FileReader(input));
-               int classIndex = dataset.numAttributes() - 1;
-               if (dataset.classIndex() > 0)
-                   classIndex = dataset.classIndex();
-               CrossValidation cv = DatasetPreprocessor.generateCVSets(
-                       dataset, equalSize, classIndex);
                
-               //save training set
-               saver.setFile(new File(otrainset));
-               saver.setInstances(cv.getTrainingSet());
-               saver.writeBatch();
-               
-               //save test set
-               saver.resetOptions();
-               saver.setFile(new File(otestset));
-               saver.setInstances(cv.getTestSet());
-               saver.writeBatch();
-               
-               //save validation set
-               saver.resetOptions();
-               saver.setFile(new File(ovalidationset));
-               saver.setInstances(cv.getValidationSet());
-               saver.writeBatch();
            } else if (cmd.equals("reorder")) {
                String output = args[2];
                String indices = args[3];
@@ -409,13 +313,121 @@ public class DatasetPreprocessor {
            System.err.println(e);
            System.err.println("Usage: DatasetPreprocessor balance <inputarff>"
                    + " <output.arff> [oversampling=true|false]\n"
-                   + "       DatasetPreprocessor cvset <input.arff> "
-                   + " <output_trainset.arff> <output_testset.arff> "
-                   + "<output_validationset.arff> [balance=true|false]\n"
                    + "       DatasetPreprocessor reorder <input.arff> "
                    + "<output.arff> <comma_seperated_indices>\n"
                    + "       DatasetPreprocessor folds <input.arff> "
                    + "<output_directory> <folds> [comma_separated_weights]");
        }
+    }
+
+    public static double[] getWeights(String weights) {
+        String[] arr = weights.split(",");
+        double[] ret = new double[arr.length];
+        for (int i = 0; i < arr.length; i++) {
+            ret[i] = Double.parseDouble(arr[i]);
+        }
+        return ret;
+    }
+    
+    /**
+     * filter a dataset using GainRatio feature selection
+     * @param dataset
+     * @param classIndex
+     * @param n
+     * @return 
+     */
+    public static Instances featureSelection(
+            Instances dataset, int classIndex, int n) 
+            throws Exception
+    {
+        
+        String[] options = new String[] {
+            "-c",
+            String.format("%s", classIndex),
+            "-T",
+            "-1.7976931348623157E308",
+            "-N",
+            String.format("%d", n)
+        };
+        
+        dataset.setClassIndex(classIndex);
+        
+        AttributeSelection filter = new AttributeSelection();
+        
+        GainRatioAttributeEval eval = new GainRatioAttributeEval();
+        Ranker ranker = new Ranker();
+        ranker.setOptions(options);
+        
+        filter.setEvaluator(eval);
+        filter.setSearch(ranker);
+        
+        filter.SelectAttributes(dataset);
+        return filter.reduceDimensionality(dataset);
+    }
+    
+    
+    /**
+     * Use GainRatio feature selection method to select indices of good attributes
+     * (Index of class attribute is not included)
+     * @param dataset
+     * @param classIndex
+     * @param n
+     * @return 
+     */
+    public static int[] featureIndicesSelection(
+            Instances dataset, int classIndex, int n) 
+            throws Exception
+    {
+        
+        String[] options = new String[] {
+            "-c",
+            String.format("%s", classIndex),
+            "-T",
+            "-1.7976931348623157E308",
+            "-N",
+            String.format("%d", n)
+        };
+        
+        dataset.setClassIndex(classIndex);
+        
+        AttributeSelection filter = new AttributeSelection();
+        
+        GainRatioAttributeEval eval = new GainRatioAttributeEval();
+        Ranker ranker = new Ranker();
+        ranker.setOptions(options);
+        
+        filter.setEvaluator(eval);
+        filter.setSearch(ranker);
+        
+        filter.SelectAttributes(dataset);
+        return filter.selectedAttributes();
+    }
+
+    /**
+     * get comma separated selected indices
+     * @param dataset
+     * @param classIndex
+     * @param n
+     * @return
+     * @throws Exception 
+     */
+    public static String featureIndicesStringSelection(
+            Instances dataset, int classIndex, int n) 
+            throws Exception 
+    {
+        int[] indices = featureIndicesSelection(dataset, classIndex, n);
+        ArrayList<Integer> list = new ArrayList<Integer>(indices.length);
+        for(int i : indices) list.add(i);
+        return StringUtils.join(list, ',');
+    }
+
+    /**
+     * append an attribute at end of attribute list
+     * @param dataset
+     * @param classAttribute
+     */
+    public static void appendAttribute(
+            Instances dataset, Attribute classAttribute) {
+        dataset.insertAttributeAt(classAttribute, dataset.numAttributes());
     }
 }

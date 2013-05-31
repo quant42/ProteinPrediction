@@ -17,9 +17,6 @@ public class PredictionEntryPoint implements ProgramEntryPoint {
      */
     public static Predictor[] predictors = new Predictor[] {
         new NeuronalNetworkPredictor(),
-        new ADTreePredictor(),
-        new NaiveBayesPredictor(),
-        new SVMPredictor()
     };
     
     /**

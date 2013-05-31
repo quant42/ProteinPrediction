@@ -12,7 +12,9 @@ import weka.classifiers.trees.ADTree;
  */
 public class ADTreePredictor extends WekaPredictor {
     
-    public static final String OUTPUT_FILE = "ADTree_result.arff.gz";
+    public static final String OUTPUT_FILE = "ADTree.model";
+    
+    public static final String RESULT_ATTR = "ADTree";
     
     public ADTreePredictor() {
         super();
@@ -24,5 +26,6 @@ public class ADTreePredictor extends WekaPredictor {
             "-3"
         };
         this.outputFileName = OUTPUT_FILE;
+        this.resultAttrName = RESULT_ATTR;
     }
 }

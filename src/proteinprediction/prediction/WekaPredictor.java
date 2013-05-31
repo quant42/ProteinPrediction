@@ -5,7 +5,6 @@
 package proteinprediction.prediction;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Enumeration;
 import proteinprediction.ProgramSettings;
@@ -13,30 +12,72 @@ import proteinprediction.io.ObjectIO;
 import proteinprediction.utils.DatasetGenerator;
 import proteinprediction.utils.DatasetPreprocessor;
 import weka.classifiers.Classifier;
+import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.converters.ArffSaver;
 
 /**
  * Wrapper for all weka classifiers
  * @author Shen Wei
  */
-public abstract class WekaPredictor extends Predictor {
+public  class WekaPredictor extends PredictorNew {
+    
+    /**
+     * weka classifier
+     */
     protected Classifier classifier;
+    
+    /**
+     * whether the classifier is already trained
+     */
     protected boolean trained;
+    
+    /**
+     * options for weka classifier
+     */
     protected String[] trainOptions;
+    
+    /**
+     * output file for storing prediction results
+     */
     protected String outputFileName;
+    
+    /**
+     * name of the attribute where the prediction results should be stored
+     */
+    protected String resultAttrName;
+    
+    /**
+     * attribute where the prediction results should be stored
+     */
+    private Attribute resultAttribute;
     
     public WekaPredictor() {
         this.trained = false;
         this.trainOptions = null;
         this.outputFileName  = null;
+        this.resultAttrName = null;
+        this.resultAttribute = null;
     }
     
     @Override
     public void loadModel(File f) {
         try {
             this.classifier = (Classifier) ObjectIO.deserializeObject(f);
+            this.trained = true;
+        } catch (Exception e) {
+            System.err.println(e.getLocalizedMessage());
+        }
+    }
+    
+    /**
+     * load model from default path
+     */
+    public void loadModel() {
+        try {
+            this.classifier = (Classifier) ObjectIO.deserializeObject(
+                    new File(ProgramSettings.MODEL_DIR, outputFileName)
+                    );
             this.trained = true;
         } catch (Exception e) {
             System.err.println(e.getLocalizedMessage());
@@ -52,16 +93,28 @@ public abstract class WekaPredictor extends Predictor {
         }
     }
     
+    /**
+     * save model to default path
+     */
+    public void saveModel() {
+        try {
+            ObjectIO.serializeObject(
+                    this.classifier, 
+                    new File(ProgramSettings.MODEL_DIR, outputFileName));
+        } catch (Exception e) {
+            System.err.println(e.getLocalizedMessage());
+        }
+    }
+    
     @Override
     /**
      * @throws IllegalStateException if options are not set to classifier
      */
-    public void train(File arffFile, File whereToSave) 
+    public void train(Instances dataset, File outputModel) 
     throws IOException, IllegalStateException{
        if (this.trainOptions == null) {
            throw new IllegalStateException("Options are not given to classifier!");
        }
-       Instances dataset = new Instances(new FileReader(arffFile));
         try {
             //training
             this.classifier.setOptions(this.trainOptions);
@@ -69,22 +122,19 @@ public abstract class WekaPredictor extends Predictor {
         } catch (Exception ex) {
             System.err.println(ex.getLocalizedMessage());
         }
-       this.saveModel(whereToSave);
+        
+        if (outputModel != null) {
+            this.saveModel(outputModel);
+        } else {
+            this.saveModel();
+        }
        this.trained = true;
     }
     
     @Override
-    public File predict(File arffFile) throws IOException {
-        Instances dataset = new Instances(new FileReader(arffFile));
-        dataset = this.predictInstances(dataset);
-        File output = new File(ProgramSettings.DATA_FOLDER, outputFileName);
-        ArffSaver saver = new ArffSaver();
-        saver.setCompressOutput(true);
-        saver.setFile(output);
-        saver.setInstances(dataset);
-        saver.writeBatch();
-        
-        return output;
+    public Instances predict(Instances dataset) throws IOException {
+        dataset = this.predictInstances(dataset);        
+        return dataset;
     }
     
     /**
@@ -104,7 +154,7 @@ public abstract class WekaPredictor extends Predictor {
         //TODO: use selected attributes
         DatasetPreprocessor.appendAttribute(
                     dataset,
-                    DatasetGenerator.getClassAttribute());
+                    this.getResultAttribute());
         Enumeration enm = dataset.enumerateInstances();
         try {
             while (enm.hasMoreElements()) {
@@ -117,5 +167,39 @@ public abstract class WekaPredictor extends Predictor {
             System.err.println(ex.getLocalizedMessage());
         }
         return dataset;
-    }  
+    }
+    
+    /**
+     * get name of attribute where prediction results are stored in
+     * @return 
+     */
+    public String getResultAttributeName() {
+        return this.resultAttrName;
+    }
+    
+    /**
+     * get attribute in which results are stored
+     * @return 
+     */
+    public Attribute getResultAttribute() {
+        if (this.resultAttribute == null) {
+            this.resultAttribute = new Attribute(
+                    this.resultAttrName, 
+                    DatasetGenerator.getClassLabels());
+        }
+        return this.resultAttribute;
+    }
+
+    /**
+     * predict class label of one instance
+     * @param inst
+     * @return
+     * @throws Exception 
+     */
+    public double predictInstance(Instance inst) throws Exception {
+        if (!this.trained) {
+            throw new IllegalStateException("Classifier is not trained yet!");
+        }
+        return this.classifier.classifyInstance(inst);
+    }
 }
