@@ -221,6 +221,11 @@ public class Main {
                 new File(inputArff), new File(inputFasta));
         Instances dataset = dg.generateDataset();
         
+        ArffSaver saver1 = new ArffSaver();
+        saver1.setFile(new File(ProgramSettings.DATASET_DIR, "generated_raw_dataset.arff"));
+        saver1.setInstances(dataset);
+        saver1.writeBatch();
+        
         //feature selection over full balanced data set
         System.err.println("Selecting features ...");
         Instances fullBalanced = DatasetPreprocessor.getBalancedDataset(

@@ -194,6 +194,7 @@ public class DatasetGenerator implements ProgramEntryPoint {
         StructuralFastaSeq sseq = this.structuralFastaDB.get(protein);
         if (sseq == null) return null;
         String label = ""+sseq.getResidueStructure(pos);
+        label = label.toUpperCase();
         if (getClassLabels().contains(label))
             return label;
         return null;

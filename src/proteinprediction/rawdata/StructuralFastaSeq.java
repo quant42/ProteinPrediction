@@ -68,25 +68,41 @@ public class StructuralFastaSeq {
     private String structuralSeq;
     
     /**
+     * value for unknown entries
+     */
+    public static final String UNKNOWN_ATTR = "__unknown__";
+    
+    /**
      * Constructor
      * @param fastaHeader FASTA header of the corresponding sequences
      */
     public StructuralFastaSeq(String fastaHeader) {
         String[] parts = fastaHeader.split("\\|");
         //skip '>'
-        sourceDB = parts[0].substring(1);
-        uniprotAC = parts[1];
-        uniprotName = parts[2];
-        String ncbiTaxa = parts[3];
-        String[] pdbInfo = parts[4].split(":");
-        
-        Matcher matcher = patternNcbiTaxa.matcher(ncbiTaxa);
-        matcher.matches();
-        pdbId = pdbInfo[1];
-        pdbChains = pdbInfo[2].split("/");
+        if (parts.length > 2) {
+            sourceDB = parts[0].substring(1);
+            uniprotAC = parts[1];
+            uniprotName = parts[2];
+            String ncbiTaxa = parts[3];
+            String[] pdbInfo = parts[4].split(":");
 
-        ncbiTaxaID = Integer.parseInt(matcher.group(1));
-        lineage = matcher.group(2);
+            Matcher matcher = patternNcbiTaxa.matcher(ncbiTaxa);
+            matcher.matches();
+            pdbId = pdbInfo[1];
+            pdbChains = pdbInfo[2].split("/");
+
+            ncbiTaxaID = Integer.parseInt(matcher.group(1));
+            lineage = matcher.group(2);
+        } else {
+            sourceDB = "uniprot";
+            uniprotAC = parts[0].substring(1);
+            uniprotName = uniprotAC;
+            pdbId = UNKNOWN_ATTR;
+            pdbChains = new String[]{};
+            ncbiTaxaID = -1;
+            lineage = UNKNOWN_ATTR;
+            
+        }
     }
     
     /**
