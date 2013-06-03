@@ -2,6 +2,11 @@ package proteinprediction.io;
 
 import java.io.*;
 import weka.core.Instances;
+import weka.core.Instance;
+import java.util.LinkedList;
+import proteinprediction.utils.DatasetGenerator;
+import weka.core.FastVector;
+import java.util.Collections;
 
 /**
  *
@@ -9,46 +14,100 @@ import weka.core.Instances;
  */
 public class FastaWriter {
 
+    private BufferedWriter out;
+
     /**
-     * stream to safe everything in
+     * generate a new Fastawriter for Outputing a prediction
      */
-    private BufferedWriter bf;
-    
-    /**
-     * constuctor for a fasta filewriter
-     */
-    public FastaWriter(File f) throws IOException {
-        this.bf = new BufferedWriter(new FileWriter(f));
-    }
-    
-    /**
-     * Write a dataset and its prediction in the file
-     */
-    public void writeDataset(Instances dataset, double[] prediction) {
-        dataset.
-    }
-    
-    /**
-     * write data to output file
-     */
-    public void write(String fastaHeader, String[] fastaLines) throws IOException {
-        bf.write(">" + fastaHeader + "\n");
-        for(int i = 0; i < fastaLines.length; i++) {
-            bf.write(fastaLines[i] + "\n");
-        }
+    public FastaWriter(File f) throws Exception {
+        out = new BufferedWriter(new FileWriter(f));
     }
 
     /**
-     * close the stream
+     * analyse dataset and its prediction
      */
-    public void close() throws IOException {
-        bf.close();
+    public void writeDataset(Instances original, double[] prediction) throws Exception {
+        LinkedList<Data> fasta = new LinkedList<Data>();
+        FastVector vec = DatasetGenerator.getClassLabels();
+        // saveall instances in new "datastructure"
+        for (int i = 0; i < original.numInstances(); i++) {
+            Instance curr = original.instance(i);
+            String ppNamePos = curr.stringValue(0);
+            int splitPos = ppNamePos.lastIndexOf("_");
+            if(splitPos == -1) {
+                System.err.println("ID_POS ATTRIBUTE WAS NOT FOUND! PLEASE GIVE ME SUCH!");
+            }
+            String ppName = ppNamePos.substring(0, splitPos);
+            char as = ' ';// TODO: if as seq is expected
+            int pos = Integer.parseInt(ppNamePos.substring(splitPos + 1));
+            fasta.add(new Data(ppName, pos, as, ((String) vec.elementAt((int) prediction[i])).charAt(0)));
+        }
+        // sort the "datasetstructure"
+        Collections.sort(fasta);
+        // output everything
+        boolean flag = false;
+        String ppName = new String();
+        String seq = new String();
+        String pred = new String();
+        for (Data d : fasta) {
+            if (flag && !ppName.equals(d.proteinName)) {
+                // write to file
+                writeProtein(ppName, seq, pred);
+                // clear
+                ppName = new String();
+                seq = new String();
+                pred = new String();
+            }
+            ppName = d.proteinName;
+            seq += d.as;
+            pred += d.prediction;
+            flag = true;
+        }
+        writeProtein(ppName, seq, pred);
     }
-    
+
     /**
-     * flush the stream
+     * write proteins name, sequence and prediction to file
      */
-    public void flush() throws IOException {
-        bf.close();
+    public void writeProtein(String name, String seq, String prediction) throws Exception {
+        out.write(">" + name + "\n");
+        //out.write(seq + "\n");// TODO: uncomment, if as seq is expected!
+        out.write(prediction + "\n");
+    }
+
+    /**
+     * close the fasta writer output stream
+     */
+    public void close() throws Exception {
+        out.close();
+    }
+
+    /**
+     * little helper class for trans. all elements
+     */
+    private class Data extends Object implements Comparable {
+
+        public String proteinName;
+        public int pos;
+        public char as;
+        public char prediction;
+
+        public Data(String proteinName, int pos, char as, char prediction) {
+            this.proteinName = proteinName;
+            this.pos = pos;
+            this.as = as;
+            this.prediction = prediction;
+        }
+
+        @Override
+        public int compareTo(Object c) {
+            Data d = (Data) c;
+            int ret = this.proteinName.compareTo(d.proteinName);
+            if (ret != 0) {
+                return ret;
+            } else {
+                return this.pos - d.pos;
+            }
+        }
     }
 }
