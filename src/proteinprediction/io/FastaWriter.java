@@ -30,14 +30,17 @@ public class FastaWriter {
         LinkedList<Data> fasta = new LinkedList<Data>();
         FastVector vec = DatasetGenerator.getClassLabels();
         // saveall instances in new "datastructure"
-        for (int i = 0; i < original.numAttributes(); i++) {
+        for (int i = 0; i < original.numInstances(); i++) {
             Instance curr = original.instance(i);
             String ppNamePos = curr.stringValue(0);
             int splitPos = ppNamePos.lastIndexOf("_");
-            String ppName = ppNamePos.substring(splitPos + 1);
+            if(splitPos == -1) {
+                System.err.println("ID_POS ATTRIBUTE WAS NOT FOUND! PLEASE GIVE ME SUCH!");
+            }
+            String ppName = ppNamePos.substring(0, splitPos);
             char as = ' ';// TODO: if as seq is expected
-            int pos = Integer.parseInt(ppNamePos.substring(0, splitPos - 1));
-            fasta.add(new Data(ppName, pos, as, ((String) vec.elementAt((int) (prediction[i] * 0.5))).charAt(0)));
+            int pos = Integer.parseInt(ppNamePos.substring(splitPos + 1));
+            fasta.add(new Data(ppName, pos, as, ((String) vec.elementAt((int) prediction[i])).charAt(0)));
         }
         // sort the "datasetstructure"
         Collections.sort(fasta);
