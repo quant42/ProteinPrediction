@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 import proteinprediction.ProgramSettings;
+import weka.classifiers.Evaluation;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -26,7 +27,12 @@ public class MainPredictor {
     /**
      * set of low-level predictors
      */
-    private WekaPredictor[] predictors;
+    public final WekaPredictor[] predictors;
+    
+    /**
+     * high-level training / prediction set for neural network
+     */
+    private Instances highlevelSet;
     
     public MainPredictor() {
         this.neuralNetwork = new MultilayerPerceptronPredictor();
@@ -38,6 +44,7 @@ public class MainPredictor {
             new VotedPerceptronPredictor(),
             new SimpleLogisticPredictor()
         };
+        this.highlevelSet = null;
     }
     
     /**
@@ -105,16 +112,16 @@ public class MainPredictor {
      */
     public double[] predict(Instances dataset) 
             throws Exception {
-        Instances testSet = generateHighLevelSet(dataset, false);
+        this.highlevelSet = generateHighLevelSet(dataset, false);
         
         ArffSaver saver = new ArffSaver();
         saver.setFile(new File(ProgramSettings.RESULT_DIR, "intermediate_result.arff"));
-        saver.setInstances(testSet);
+        saver.setInstances(this.highlevelSet);
         saver.writeBatch();
         
-        double[] values = new double[testSet.numInstances()];
+        double[] values = new double[this.highlevelSet.numInstances()];
         for (int i = 0; i < values.length; i++) {
-            values[i] = this.neuralNetwork.predictInstance(testSet.instance(i));
+            values[i] = this.neuralNetwork.predictInstance(this.highlevelSet.instance(i));
         }
         return values;
     }
@@ -167,6 +174,34 @@ public class MainPredictor {
             trainSet.add(newInst);
         }
         return trainSet;
+    }
+    
+    /**
+     * get prediction results of low-level predictors
+     * @return 
+     */
+    public Instances getIntermediateResults() {
+        return this.highlevelSet;
+    }
+    
+    public Evaluation[] evaluate(Instances testSet) throws Exception {
+        testSet.setClassIndex(testSet.numAttributes() - 1);
+        Evaluation evals[] = new Evaluation[predictors.length + 1];
+        //for low-level predictors
+        int idx = 0;
+        for (WekaPredictor predictor : predictors) {
+            Evaluation eval = new Evaluation(testSet);
+            eval.evaluateModel(predictor.classifier, testSet);
+            evals[idx++] = eval;
+        }
+        
+        //for top-level predictor
+        Instances highlevel = generateHighLevelSet(testSet, true);
+        evals[evals.length - 1] = new Evaluation(highlevel);
+        evals[evals.length - 1].evaluateModel(
+                this.neuralNetwork.classifier, highlevel);
+        
+        return evals;
     }
     
 }

@@ -37,7 +37,7 @@ public class FastaWriter {
             String ppName = ppNamePos.substring(splitPos + 1);
             char as = ' ';// TODO: if as seq is expected
             int pos = Integer.parseInt(ppNamePos.substring(0, splitPos - 1));
-            fasta.add(new Data(ppName, pos, as, ((String)vec.elementAt((int)(prediction[i] * 0.5))).charAt(0)));
+            fasta.add(new Data(ppName, pos, as, ((String) vec.elementAt((int) (prediction[i] * 0.5))).charAt(0)));
         }
         // sort the "datasetstructure"
         Collections.sort(fasta);
@@ -46,14 +46,14 @@ public class FastaWriter {
         String ppName = new String();
         String seq = new String();
         String pred = new String();
-        for(Data d : fasta) {
-            if(flag && !ppName.equals(d.proteinName)) {
+        for (Data d : fasta) {
+            if (flag && !ppName.equals(d.proteinName)) {
                 // write to file
                 writeProtein(ppName, seq, pred);
                 // clear
                 ppName = new String();
                 seq = new String();
-                pred= new String();
+                pred = new String();
             }
             ppName = d.proteinName;
             seq += d.as;

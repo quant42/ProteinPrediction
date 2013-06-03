@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import proteinprediction.io.StructuralFastaLoader;
@@ -52,6 +53,11 @@ public class DatasetGenerator implements ProgramEntryPoint {
      * database for fasta sequences with structural info
      */
     private HashMap<String, StructuralFastaSeq> structuralFastaDB;
+    
+    /**
+     * 
+     */
+    private HashSet<String> classLabelSet = new HashSet<String>();
 
     /**
      * A simple DatasetGenerator that does nothing!
@@ -194,8 +200,14 @@ public class DatasetGenerator implements ProgramEntryPoint {
         StructuralFastaSeq sseq = this.structuralFastaDB.get(protein);
         if (sseq == null) return null;
         String label = ""+sseq.getResidueStructure(pos);
-        if (getClassLabels().contains(label))
+        label = label.toUpperCase();
+        if (!this.classLabelSet.contains(label)) {
+            this.classLabelSet.add(label);
+            System.err.println("Found structural component: " + label);
+        }
+        if (getClassLabels().contains(label)) {
             return label;
+        }
         return null;
     }
 

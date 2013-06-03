@@ -7,14 +7,18 @@ package proteinprediction;
 import proteinprediction.io.FastaWriter;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import org.apache.commons.io.output.TeeOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import proteinprediction.RunOptions.RunActions;
 import proteinprediction.prediction.MainPredictor;
 import proteinprediction.utils.DatasetGenerator;
 import proteinprediction.utils.DatasetPreprocessor;
+import weka.classifiers.Evaluation;
 import weka.core.Attribute;
 import weka.core.Instances;
 import weka.core.converters.ArffSaver;
@@ -162,8 +166,52 @@ public class Main {
         
     }
 
-    private static void validate(RunOptions option) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private static void validate(RunOptions option) throws IOException, Exception {
+        String inputArff = option.inputArff;
+        String outputText = option.outputStatistics;
+        
+        //load validation set
+        System.err.println("Loading validation set ...");
+        Instances dataset = new Instances( new FileReader(inputArff) );
+        
+        //reduce feature space
+        System.err.println("Check and reduce feature space ...");
+        String[] features = loadSelectedAttributes().split(",");
+        String featureIDs = getIndicesOfSelectedFeatures(dataset, features);
+        dataset = DatasetPreprocessor.selectFeatures(dataset, featureIDs);
+        
+        //load models
+        System.err.println("Loading models ...");
+        MainPredictor predictor = new MainPredictor();
+        predictor.loadModel();
+        
+        //validate
+        System.err.println("Evaluating models ...");
+        Evaluation[] evals = predictor.evaluate(dataset);
+        
+        //print out results
+        OutputStream os = (outputText == null) ? 
+                System.out : 
+                new TeeOutputStream(
+                    System.out, 
+                    new FileOutputStream(
+                        new File(ProgramSettings.RESULT_DIR, outputText)));
+        PrintWriter writer = new PrintWriter(os);
+        
+        for (int i = 0; i < evals.length; i++) {
+            Evaluation eval = evals[i];
+            if (i < predictor.predictors.length) {
+                writer.println("CLASSIFIER: " + predictor.predictors[i].getClass().getSimpleName());
+            } else {
+                writer.println("CLASSIFIER: " + predictor.getClass().getSimpleName());
+            }
+            writer.println("=== Summary ===");
+            writer.println(eval.toSummaryString());
+            writer.println(eval.toClassDetailsString());
+            writer.println(eval.toMatrixString());
+        }
+        writer.flush();
+        System.err.println("Done!");
     }
 
     /**
@@ -181,6 +229,11 @@ public class Main {
         DatasetGenerator dg = new DatasetGenerator(
                 new File(inputArff), new File(inputFasta));
         Instances dataset = dg.generateDataset();
+        
+        ArffSaver saver1 = new ArffSaver();
+        saver1.setFile(new File(ProgramSettings.DATASET_DIR, "generated_raw_dataset.arff"));
+        saver1.setInstances(dataset);
+        saver1.writeBatch();
         
         //feature selection over full balanced data set
         System.err.println("Selecting features ...");
