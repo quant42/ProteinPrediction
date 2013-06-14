@@ -20,8 +20,9 @@ import weka.core.Instances;
  * Wrapper for all weka classifiers
  * @author Shen Wei
  */
-public  class WekaPredictor extends PredictorNew {
+public  class WekaPredictor extends PredictorNew{
     
+    private static final long serialVersionUID = 17590219L;
     /**
      * weka classifier
      */
@@ -52,12 +53,17 @@ public  class WekaPredictor extends PredictorNew {
      */
     private Attribute resultAttribute;
     
+    protected String resultNumericAttrName;
+    protected Attribute resultNumericAttribute;
+    
     public WekaPredictor() {
         this.trained = false;
         this.trainOptions = null;
         this.outputFileName  = null;
         this.resultAttrName = null;
         this.resultAttribute = null;
+        this.resultNumericAttribute = null;
+        this.resultNumericAttrName = null;
     }
     
     @Override
@@ -126,7 +132,7 @@ public  class WekaPredictor extends PredictorNew {
         if (outputModel != null) {
             this.saveModel(outputModel);
         } else {
-            this.saveModel();
+            //this.saveModel();
         }
        this.trained = true;
     }
@@ -189,6 +195,14 @@ public  class WekaPredictor extends PredictorNew {
         }
         return this.resultAttribute;
     }
+    
+    public Attribute getResultNumericAttribute() {
+        if (this.resultNumericAttribute == null) {
+            this.resultNumericAttribute = new Attribute(
+                    this.resultNumericAttrName);
+        }
+        return this.resultNumericAttribute;
+    }
 
     /**
      * predict class label of one instance
@@ -201,5 +215,18 @@ public  class WekaPredictor extends PredictorNew {
             throw new IllegalStateException("Classifier is not trained yet!");
         }
         return this.classifier.classifyInstance(inst);
+    }
+    
+    /**
+     * get prediction score of the instance
+     * @param inst
+     * @return
+     * @throws Exception 
+     */
+    public double[] predictionScore(Instance inst) throws Exception{
+        if (!this.trained) {
+            throw new IllegalStateException("Classifier is not trained yet!");
+        }
+        return this.classifier.distributionForInstance(inst);
     }
 }

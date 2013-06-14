@@ -11,6 +11,9 @@ import weka.classifiers.functions.RBFNetwork;
  * @author Shen Wei
  */
 public class RBFNetworkPredictor extends WekaPredictor {
+    
+    private static final long serialVersionUID = 98064175L;
+    
     public static final String OUTPUT_FILE = "RBFNetwork.model";
     
     public static final String RESULT_ATTR = "RBFNetwork";
@@ -27,5 +30,6 @@ public class RBFNetworkPredictor extends WekaPredictor {
         };
         this.outputFileName = OUTPUT_FILE;
         this.resultAttrName = RESULT_ATTR;
+        this.resultNumericAttrName = "RBFNetwork_raw";
     }
 }

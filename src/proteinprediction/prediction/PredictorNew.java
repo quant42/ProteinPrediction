@@ -9,7 +9,7 @@ import weka.core.Instances;
  * 
  * @author Yann, Shen Wei
  */
-public abstract class PredictorNew {
+public abstract class PredictorNew  implements Serializable {
     
     /**
      * load trained model

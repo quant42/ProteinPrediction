@@ -12,6 +12,8 @@ import weka.classifiers.trees.ADTree;
  */
 public class ADTreePredictor extends WekaPredictor {
     
+    private static final long serialVersionUID = 35839782L;
+    
     public static final String OUTPUT_FILE = "ADTree.model";
     
     public static final String RESULT_ATTR = "ADTree";
@@ -27,5 +29,6 @@ public class ADTreePredictor extends WekaPredictor {
         };
         this.outputFileName = OUTPUT_FILE;
         this.resultAttrName = RESULT_ATTR;
+        this.resultNumericAttrName = "ADTree_raw";
     }
 }

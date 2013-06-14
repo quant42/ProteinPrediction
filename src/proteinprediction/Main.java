@@ -23,6 +23,8 @@ import weka.core.Attribute;
 import weka.core.Instances;
 import weka.core.converters.ArffSaver;
 import java.util.LinkedList;
+import java.util.List;
+import proteinprediction.prediction.MetaPredictor;
 
 /**
  * Entry point of predictors
@@ -39,6 +41,11 @@ public class Main {
      * attribute name of prediction result
      */
     public static final String predictionResultAttr = "TMH_TML_prediction";
+    
+    /**
+     * attribute name for prediction scores
+     */
+    public static final String predictionScoreAttr = "TMH_TML_prediction_score";
 
     /**
      * main entry point
@@ -64,6 +71,12 @@ public class Main {
             } else if (option.getRunAction() == RunActions.ACTION_DATA) {
                 //prepare data
                 prepareData(option);
+            } else if (option.getRunAction() == RunActions.ACTION_TRAIN_META) {
+                //train meta predictor
+                trainMetaPredictor(option);
+            } else if (option.getRunAction() == RunActions.ACTION_PREDICT_META) {
+                //prediction through meta predictor
+                predictMetaPredictor(option);
             } else {
                 //show help
                 showHelp();
@@ -111,18 +124,41 @@ public class Main {
         System.err.println("Predicting ...");
         dataset.setClassIndex(dataset.numAttributes() - 1);
         double[] result = predictor.predict(dataset);
+        double[] scores = predictor.getPredictionScores();
 
         System.err.println("Writing results ...");
         // output fasta file
-        try {
-            FastaWriter fw = new FastaWriter(new File(outputFasta));
-            fw.writeDataset(original, result);
-            fw.close();
-        } catch (Exception e) {
-            System.err.println("Error writing Fasta output!");
-            System.err.println(e);
-            e.printStackTrace();
+        if (outputFasta != null) {
+            try {
+                FastaWriter fw = new FastaWriter(new File(
+                        ProgramSettings.RESULT_DIR, outputFasta));
+                fw.writeDataset(original, result);
+                fw.close();
+            } catch (Exception e) {
+                System.err.println("Error writing Fasta output!");
+                System.err.println(e);
+                e.printStackTrace();
+            }
         }
+        
+        //add low-level prediction scores
+        List<double[]> lowlevelScores = predictor.getLowlevelPredictionScores();
+        int scoreIndices[] = new int[lowlevelScores.size()];
+        for (int i = 0; i < predictor.predictors.length; i++) {
+            String attrName = String.format(
+                    "%s_%s", 
+                    predictor.predictors[i].getClass().getSimpleName(),
+                    "score");
+            scoreIndices[i] = original.numAttributes();
+            original.insertAttributeAt(
+                    new Attribute(attrName), 
+                    original.numAttributes());
+        }
+        
+        //add prediction score into original data set
+        original.insertAttributeAt(
+                new Attribute(predictionScoreAttr), 
+                original.numAttributes());
         //add prediction result into original data set
         original.insertAttributeAt(
                 new Attribute(
@@ -131,7 +167,14 @@ public class Main {
                 original.numAttributes());
         original.setClassIndex(original.numAttributes() - 1);
         for (int i = 0; i < result.length; i++) {
+            original.instance(i).setValue(original.classIndex() - 1, scores[i]);
             original.instance(i).setClassValue(result[i]);
+            
+            for (int j = 0; j < lowlevelScores.size(); j++) {
+                original.instance(i).setValue(
+                        scoreIndices[j], 
+                        lowlevelScores.get(j)[i]);
+            }
         }
         ArffSaver saver = new ArffSaver();
         saver.setFile(new File(ProgramSettings.RESULT_DIR, outputArff));
@@ -174,13 +217,13 @@ public class Main {
         //load validation set
         System.err.println("Loading validation set ...");
         Instances dataset = new Instances(new FileReader(inputArff));
+        dataset.deleteStringAttributes();
 
         //reduce feature space
         System.err.println("Check and reduce feature space ...");
         String[] features = loadSelectedAttributes().split(",");
         String featureIDs = getIndicesOfSelectedFeatures(dataset, features);
         dataset = DatasetPreprocessor.selectFeatures(dataset, featureIDs);
-
         //load models
         System.err.println("Loading models ...");
         MainPredictor predictor = new MainPredictor();
@@ -229,12 +272,17 @@ public class Main {
         System.err.println("Loading data set ...");
         DatasetGenerator dg = new DatasetGenerator(
                 new File(inputArff), new File(inputFasta));
-        Instances dataset = dg.generateDataset();
+        
+        //introduce class labels but do not remove string attributes
+        Instances dataset = dg.generateDataset(false);
 
         ArffSaver saver1 = new ArffSaver();
         saver1.setFile(new File(ProgramSettings.DATASET_DIR, "generated_raw_dataset.arff"));
         saver1.setInstances(dataset);
         saver1.writeBatch();
+        
+        //remove string attributes before feature selection
+        dataset.deleteStringAttributes();
 
         //feature selection over full balanced data set
         System.err.println("Selecting features ...");
@@ -330,5 +378,82 @@ public class Main {
                 ids.add(dataset.numAttributes());
         }
         return StringUtils.join(ids, ',');
+    }
+
+    private static void trainMetaPredictor(RunOptions option) 
+    throws Exception {
+        String inputArff = option.inputArff;
+
+        System.err.println("Loading data set ...");
+        Instances dataset = new Instances(new FileReader(inputArff));
+
+        //training
+        System.err.println("Training model ...");
+        MetaPredictor predictor = new MetaPredictor();
+        predictor.train(dataset);
+        predictor.saveModel();
+
+        System.err.println("All done! Please check out files in directory: "
+                + ProgramSettings.MODEL_DIR);
+    }
+
+    private static void predictMetaPredictor(RunOptions option) 
+    throws Exception {
+        String inputArff = option.inputArff;
+        String outputArff = option.outputArff;
+        String outputFasta = option.outputFasta;
+
+        System.err.println("Loading data set ...");
+        Instances dataset = new Instances(new FileReader(inputArff));
+        Instances original = dataset;
+
+        System.err.println("Check and reduce feature space ...");
+        String features = loadSelectedAttributes();
+        String featureIDs =
+                getIndicesOfSelectedFeatures(dataset, features.split(","));
+        dataset = DatasetPreprocessor.selectFeatures(
+                dataset, featureIDs);
+
+        System.err.println("Loading prediction model ...");
+        MetaPredictor predictor = new MetaPredictor();
+        predictor.loadModel();
+
+        System.err.println("Predicting ...");
+        dataset.setClassIndex(dataset.numAttributes() - 1);
+        double[] result = predictor.predict(dataset);
+        double[] scores = predictor.getPredictionScores();
+
+        System.err.println("Writing results ...");
+        // output fasta file
+        if (outputFasta != null) {
+            try {
+                FastaWriter fw = new FastaWriter(new File(
+                        ProgramSettings.RESULT_DIR, outputFasta));
+                fw.writeDataset(original, result);
+                fw.close();
+            } catch (Exception e) {
+                System.err.println("Error writing Fasta output!");
+                System.err.println(e);
+                e.printStackTrace();
+            }
+        }
+        
+        //add prediction score into original data set
+        original.insertAttributeAt(
+                new Attribute(predictionScoreAttr), 
+                original.numAttributes());
+        //add prediction result into original data set
+        original.insertAttributeAt(
+                predictor.getResultAttribute(),
+                original.numAttributes());
+        original.setClassIndex(original.numAttributes() - 1);
+        for (int i = 0; i < result.length; i++) {
+            original.instance(i).setValue(original.classIndex() - 1, scores[i]);
+            original.instance(i).setClassValue(result[i]);
+        }
+        ArffSaver saver = new ArffSaver();
+        saver.setFile(new File(ProgramSettings.RESULT_DIR, outputArff));
+        saver.setInstances(original);
+        saver.writeBatch();
     }
 }

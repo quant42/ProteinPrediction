@@ -11,6 +11,8 @@ import weka.classifiers.functions.VotedPerceptron;
  * @author wei
  */
 public class VotedPerceptronPredictor extends WekaPredictor {
+    private static final long serialVersionUID = 12532246L;
+    
     public static final String OUTPUT_FILE = "VotedPerceptron.model";
     public static final String RESULT_ATTR = "VotedPerceptron";
     
@@ -25,5 +27,6 @@ public class VotedPerceptronPredictor extends WekaPredictor {
         };
         this.outputFileName = OUTPUT_FILE;
         this.resultAttrName = RESULT_ATTR;
+        this.resultNumericAttrName = "VotedPerceptron_raw";
     }
 }

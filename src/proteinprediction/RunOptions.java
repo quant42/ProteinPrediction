@@ -9,6 +9,7 @@ package proteinprediction;
  * @author Shen Wei
  */
 class RunOptions {
+    
     /**
      * defines run action of program
      */
@@ -17,13 +18,17 @@ class RunOptions {
         ACTION_PREDICT,
         ACTION_VALIDATE,
         ACTION_DATA,
-        ACTION_HELP
+        ACTION_HELP,
+        ACTION_TRAIN_META,
+        ACTION_PREDICT_META
     };
     
     public static final String MODE_TRAIN = "train";
     public static final String MODE_PREDICT = "predict";
     public static final String MODE_VALIDATE = "validate";
     public static final String MODE_DATA = "prepareData";
+    public static final String MODE_TRAIN_META = "trainMeta";
+    public static final String MODE_PREDICT_META = "predictMeta";
     //public static final String MODE_HELP = "|-h|--help|-help|-?|help|";
     
     /**
@@ -80,6 +85,14 @@ class RunOptions {
                 if (args.length > 4) {
                     option.features = Integer.parseInt(args[4]);
                 }
+            } else if (mode.equals(MODE_TRAIN_META)) {
+                option.action = RunActions.ACTION_TRAIN_META;
+            } else if (mode.equals(MODE_PREDICT_META)) {
+                option.action = RunActions.ACTION_PREDICT_META;
+                option.outputArff = args[2];
+                if (args.length > 3) {
+                    option.outputFasta = args[3];
+                }
             } else {
                 option.action = RunActions.ACTION_HELP;
             }
@@ -117,6 +130,9 @@ class RunOptions {
         
         sb.append("    predict <input.arff> <result_output.arff> [output.fasta]\n");
         sb.append("    validate <validation_set.arff> [statistics.txt]\n");
+        
+        sb.append("    trainMeta <train_set.arff>\n");
+        sb.append("    predictMeta <input.arff> <result_output.arff> [output.fasta]\n");
         sb.append("    -h|--help|-help|-?|help\n\n");
         
         sb.append("Examples:\n");

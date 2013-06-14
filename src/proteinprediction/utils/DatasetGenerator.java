@@ -221,13 +221,24 @@ public class DatasetGenerator implements ProgramEntryPoint {
         }
         return classAttr;
     }
-
+    
     /**
      * generate converted arff file and write into output file
-     * @return processed dataset
+     * String attributes are removed
+     * @return
      * @throws IOException 
      */
     public Instances generateDataset() throws IOException {
+        return this.generateDataset(true);
+    }
+
+    /**
+     * generate converted arff file and write into output file
+     * @param removeStringAttrs Whether to remove string attributes in dataset
+     * @return processed dataset
+     * @throws IOException 
+     */
+    public Instances generateDataset(boolean removeStringAttrs) throws IOException {
         Pattern pattern = Pattern.compile("^(.*)_(\\d+)$");
        
         Instances dataset = new Instances(
@@ -258,7 +269,8 @@ public class DatasetGenerator implements ProgramEntryPoint {
         
         //remove unwanted attributes: class and ID_POS
         dataset.deleteAttributeAt(oldClassIdx);
-        dataset.deleteStringAttributes();
+        if (removeStringAttrs)
+            dataset.deleteStringAttributes();
         
         //remove instances whose class label is missing
         dataset.deleteWithMissingClass();

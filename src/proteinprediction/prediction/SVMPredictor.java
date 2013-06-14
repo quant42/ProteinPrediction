@@ -11,6 +11,9 @@ import weka.classifiers.functions.LibSVM;
  * @author Shen Wei
  */
 public class SVMPredictor  extends WekaPredictor{
+    
+    private static final long serialVersionUID = 66342117L;
+    
     public static final String OUTPUT_FILE = "LibSVM.model";
     
     public static final String RESULT_ATTR = "LibSVM";
@@ -33,5 +36,6 @@ public class SVMPredictor  extends WekaPredictor{
         };
         this.outputFileName = OUTPUT_FILE;
         this.resultAttrName = RESULT_ATTR;
+        this.resultNumericAttrName = "LibSVM_raw";
     }
 }

@@ -11,6 +11,9 @@ import weka.classifiers.functions.MultilayerPerceptron;
  * @author wei
  */
 public class MultilayerPerceptronPredictor extends WekaPredictor {
+    
+    private static final long serialVersionUID = 39505078L;
+    
     public static final String OUTPUT_FILE = "MultilayerPerceptron.model";
     public static final String RESULT_ATTR = "MultilayerPerceptron";
     
@@ -28,5 +31,6 @@ public class MultilayerPerceptronPredictor extends WekaPredictor {
         };
         this.outputFileName = OUTPUT_FILE;
         this.resultAttrName = RESULT_ATTR;
+        this.resultNumericAttrName = "MultilayerPerceptron_raw";
     }
 }

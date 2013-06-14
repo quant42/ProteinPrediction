@@ -12,6 +12,8 @@ import weka.classifiers.bayes.NaiveBayes;
  */
 public class NaiveBayesPredictor extends WekaPredictor {
     
+    private static final long serialVersionUID = 12280401L;
+    
     public static final String OUTPUT_FILE = "NaiveBayes.model";
     public static final String RESULT_ATTR = "NaiveBayes";
     
@@ -21,5 +23,6 @@ public class NaiveBayesPredictor extends WekaPredictor {
         this.trainOptions = new String[]{};
         this.outputFileName = OUTPUT_FILE;
         this.resultAttrName = RESULT_ATTR;
+        this.resultNumericAttrName = "NaiveBayes_raw";
     }
 }

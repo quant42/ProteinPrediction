@@ -11,6 +11,9 @@ import weka.classifiers.trees.J48;
  * @author wei
  */
 public class J48Predictor extends WekaPredictor {
+    
+    private static final long serialVersionUID = 44179305L;
+    
     public static final String OUTPUT_FILE = "J48.model";
     public static final String RESULT_ATTR = "J48";
     
@@ -23,5 +26,6 @@ public class J48Predictor extends WekaPredictor {
         };
         this.outputFileName = OUTPUT_FILE;
         this.resultAttrName = RESULT_ATTR;
+        this.resultNumericAttrName = "J48_raw";
     }
 }

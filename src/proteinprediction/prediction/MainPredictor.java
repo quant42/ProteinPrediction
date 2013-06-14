@@ -6,7 +6,10 @@ package proteinprediction.prediction;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import proteinprediction.ProgramSettings;
 import weka.classifiers.Evaluation;
 import weka.core.FastVector;
@@ -18,7 +21,9 @@ import weka.core.converters.ArffSaver;
  * Combines different predictors with neural network predictor
  * @author Shen Wei
  */
-public class MainPredictor {    
+public class MainPredictor  implements Serializable {
+    
+    private static final long serialVersionUID = 84018477L;
     /**
      * neural network for combining results of other predictors
      */
@@ -34,16 +39,27 @@ public class MainPredictor {
      */
     private Instances highlevelSet;
     
-    public MainPredictor() {
+    /**
+     * stores prediction scores
+     */
+    private double[] scores = null;
+    
+    /**
+     * scores of low-level predictors
+     */
+    private List<double[]> lowlevelScores;
+    
+    public MainPredictor(){
         this.neuralNetwork = new MultilayerPerceptronPredictor();
         this.predictors = new WekaPredictor[] {
-            //new J48Predictor(),
-            new NaiveBayesPredictor(),
-            new SVMPredictor(),
-            new RBFNetworkPredictor(),
+            new J48Predictor(),
+            //new NaiveBayesPredictor(),
+            //new SVMPredictor(),
+            //new RBFNetworkPredictor(),
             new VotedPerceptronPredictor(),
             new SimpleLogisticPredictor()
         };
+        this.lowlevelScores = new ArrayList<double[]>();
         this.highlevelSet = null;
     }
     
@@ -93,6 +109,7 @@ public class MainPredictor {
             System.err.println("Training " 
                     + predictor.classifier.getClass().getSimpleName() + " ...");
             predictor.train(dataset, null);
+            predictor.saveModel();
         }
         
         //generate training set for neural network
@@ -102,6 +119,7 @@ public class MainPredictor {
         //train neural network
         System.err.println("Training neural network ...");
         neuralNetwork.train(trainSet, null);
+        neuralNetwork.saveModel();
     }
     
     /**
@@ -120,8 +138,13 @@ public class MainPredictor {
         saver.writeBatch();
         
         double[] values = new double[this.highlevelSet.numInstances()];
+        this.scores = new double[values.length];
         for (int i = 0; i < values.length; i++) {
-            values[i] = this.neuralNetwork.predictInstance(this.highlevelSet.instance(i));
+            Instance inst = highlevelSet.instance(i);
+            values[i] = this.neuralNetwork.predictInstance(inst);
+            double distribution[] = neuralNetwork.classifier
+                    .distributionForInstance(inst);
+            this.scores[i] = distribution[(int) values[i]];
         }
         return values;
     }
@@ -138,10 +161,13 @@ public class MainPredictor {
     {
         FastVector attrInfo = new FastVector();
         
+        this.lowlevelScores.clear();
+        
         //add result attributes
         for (int i = 0; i < predictors.length; i++) {
             WekaPredictor predictor = predictors[i];
-            attrInfo.addElement(predictor.getResultAttribute());
+            attrInfo.addElement(predictor.getResultNumericAttribute());
+            this.lowlevelScores.add(new double[dataset.numInstances()]);
         }
         
         //add class attribute
@@ -154,6 +180,7 @@ public class MainPredictor {
                 0);
         trainSet.setClassIndex(trainSet.numAttributes() - 1);
         Enumeration enm = dataset.enumerateInstances();
+        int instanceId = 0;
         while (enm.hasMoreElements()) {
             Instance inst = (Instance) enm.nextElement();
             Instance newInst = new Instance(trainSet.numAttributes());
@@ -168,9 +195,12 @@ public class MainPredictor {
 
             //set prediction result for each predictors
             for (int i = 0; i < predictors.length; i++) {
-                double value = predictors[i].predictInstance(inst);
-                newInst.setValue(i, value);
+                //double value = predictors[i].predictInstance(inst);
+                double score = predictors[i].predictionScore(inst)[0];
+                this.lowlevelScores.get(i)[instanceId] = score;
+                newInst.setValue(i, score);
             }
+            instanceId++;
             trainSet.add(newInst);
         }
         return trainSet;
@@ -204,4 +234,25 @@ public class MainPredictor {
         return evals;
     }
     
+    /**
+     * get scores for prediction
+     * @return 
+     */
+    public double[] getPredictionScores() {
+        if (this.scores == null) {
+            throw new IllegalStateException("Prediction not performed!");
+        }
+        return this.scores;
+    }
+    
+    /**
+     * get prediction scores of low-level predictors
+     * @return 
+     */
+    public List<double[]> getLowlevelPredictionScores() {
+        if (this.scores == null) {
+            throw new IllegalStateException("Prediction not performed!");
+        }
+        return this.lowlevelScores;
+    }
 }
