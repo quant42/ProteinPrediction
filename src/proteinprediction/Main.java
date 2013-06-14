@@ -204,6 +204,7 @@ public class Main {
         System.err.println("Training model ...");
         MainPredictor predictor = new MainPredictor();
         predictor.train(dataset);
+        predictor.saveModel();
 
         System.err.println("All done! Please check out files in directory: "
                 + ProgramSettings.MODEL_DIR);
@@ -386,6 +387,11 @@ public class Main {
 
         System.err.println("Loading data set ...");
         Instances dataset = new Instances(new FileReader(inputArff));
+        
+        //gather list of selected attributes
+        String[] attrNames = getAttributeSet(dataset);
+        //write 
+        writeSelectedAttributes(attrNames);
 
         //training
         System.err.println("Training model ...");

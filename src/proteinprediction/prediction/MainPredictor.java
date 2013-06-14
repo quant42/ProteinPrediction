@@ -89,6 +89,10 @@ public class MainPredictor  implements Serializable {
     public void saveModel() 
             throws IOException 
     {
+        //save low-level predictors
+        for (WekaPredictor predictor : predictors) {
+            predictor.saveModel();
+        }
         this.neuralNetwork.saveModel();
     }
     
@@ -109,7 +113,6 @@ public class MainPredictor  implements Serializable {
             System.err.println("Training " 
                     + predictor.classifier.getClass().getSimpleName() + " ...");
             predictor.train(dataset, null);
-            predictor.saveModel();
         }
         
         //generate training set for neural network
@@ -119,7 +122,6 @@ public class MainPredictor  implements Serializable {
         //train neural network
         System.err.println("Training neural network ...");
         neuralNetwork.train(trainSet, null);
-        neuralNetwork.saveModel();
     }
     
     /**
