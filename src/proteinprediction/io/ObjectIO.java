@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Serialize and de-serialize java objects
@@ -28,7 +30,8 @@ public class ObjectIO {
             File outputFile) throws IOException
     {
         ObjectOutputStream out = new ObjectOutputStream(
-                new FileOutputStream(outputFile));
+                new GZIPOutputStream(
+                new FileOutputStream(outputFile)));
         
         out.writeObject(object);
         out.flush();
@@ -47,7 +50,7 @@ public class ObjectIO {
             throws IOException, ClassNotFoundException
     {
         ObjectInputStream in = new ObjectInputStream(
-                new FileInputStream(inputFile));
+                new GZIPInputStream(new FileInputStream(inputFile)));
         
         return in.readObject();
     }
