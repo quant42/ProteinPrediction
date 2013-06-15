@@ -49,7 +49,6 @@ public class MetaPredictor implements Serializable {
                 new XZCompressorOutputStream(
                 new FileOutputStream(this.modelsFile)));
         for (int i = 0; i < ROUNDS; i++) {
-            Random rand = new Random();
             Instances sample = DatasetPreprocessor.bootstrapResample(dataset);
             try {
                 System.err.println(
@@ -58,6 +57,7 @@ public class MetaPredictor implements Serializable {
                 MainPredictor predictor = new MainPredictor();
                 predictor.train(sample);
                 os.writeObject(predictor);
+                os.reset();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
