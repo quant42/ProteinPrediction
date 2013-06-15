@@ -56,7 +56,7 @@ public class MainPredictor  implements Serializable {
             //new NaiveBayesPredictor(),
             //new SVMPredictor(),
             //new RBFNetworkPredictor(),
-            new VotedPerceptronPredictor(),
+            //new VotedPerceptronPredictor(),
             new SimpleLogisticPredictor()
         };
         this.lowlevelScores = new ArrayList<double[]>();

@@ -4,13 +4,20 @@
  */
 package proteinprediction.prediction;
 
+import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Random;
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
 import proteinprediction.ProgramSettings;
-import proteinprediction.io.ObjectIO;
 import proteinprediction.utils.DatasetGenerator;
+import proteinprediction.utils.DatasetPreprocessor;
 import weka.core.Attribute;
 import weka.core.Instances;
 
@@ -23,84 +30,70 @@ public class MetaPredictor implements Serializable {
     private static final long serialVersionUID = 12532246L;
     
     public static final int ROUNDS = 1000;
-    public MainPredictor[] bags = null;
     
     private static Attribute RESULT_ATTR = null;
     public static final String RESULT_ATTR_NAME = "MetaPredictor_result";
     public static final String MODEL_NAME = "MetaPredictor.model";
     
-    private boolean trained;
-    
     private double[] scores = null;
     
+    public final File modelsFile;
+    
     public MetaPredictor() {
-        this.bags = new MainPredictor[ROUNDS];
-        for (int i = 0; i < ROUNDS; i++) {
-            bags[i] = new MainPredictor();
-        }
-        this.trained = false;
+        modelsFile = new File(ProgramSettings.MODEL_DIR, MODEL_NAME);
     }
 
-    public void loadModel(File f) {
-        try {
-            MetaPredictor meta = (MetaPredictor) ObjectIO.deserializeObject(f);
-            this.bags = meta.bags;
-            this.trained = true;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-    
-    public void loadModel() {
-        File f = new File(ProgramSettings.MODEL_DIR, MODEL_NAME);
-        this.loadModel(f);
-    }
-
-    public void saveModel(File f) {
-        try {
-            ObjectIO.serializeObject(this, f);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-    
-    public void saveModel() {
-        File f = new File(ProgramSettings.MODEL_DIR, MODEL_NAME);
-        this.saveModel(f);
-    }
-
-    public void train(Instances dataset) {
+    public void train(Instances dataset) throws IOException {
+        this.modelsFile.delete();
+        ObjectOutputStream os = new ObjectOutputStream(
+                new XZCompressorOutputStream(
+                new FileOutputStream(this.modelsFile)));
         for (int i = 0; i < ROUNDS; i++) {
             Random rand = new Random();
-            Instances sample = dataset.resample(rand);
+            Instances sample = DatasetPreprocessor.bootstrapResample(dataset);
             try {
                 System.err.println(
                         String.format("Training: Round (%d/%d)", i+1, ROUNDS)
                 );
-                bags[i].train(sample);
+                MainPredictor predictor = new MainPredictor();
+                predictor.train(sample);
+                os.writeObject(predictor);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
-        this.trained = true;
+        os.flush();
+        os.close();
     }
 
     public double[] predict(Instances dataset) throws IOException, Exception {
-        if (!this.trained) {
-            throw new IllegalStateException("Predictor not trained yet!");
-        }
         
         double[] result = new double[dataset.numInstances()];
         this.scores = new double[result.length];
+        ObjectInputStream is = new ObjectInputStream(
+                new XZCompressorInputStream(
+                new FileInputStream(this.modelsFile)));
+        int N = 0;
         for (int i = 0; i < ROUNDS; i++) {
             System.err.println(
                     String.format("Predicting: Round (%d/%d)", i+1, ROUNDS));
-            addTo(result, bags[i].predict(dataset));
+            try {
+                MainPredictor predictor = (MainPredictor) is.readObject();
+                addTo(result, predictor.predict(dataset));
+                N++;
+            } catch (EOFException e) {
+            }
         }
+        
+        is.close();
         
         for (int i = 0; i < result.length; i++) {
             scores[i] = 1.0 - result[i] / result.length;
-            result[i] = result[i] < ROUNDS / 2.0 ? 0 : 1;
+            if (N > 0) {
+                result[i] = result[i] < N / 2.0 ? 0 : 1;
+            } else {
+                result[i] = 0;
+            }
         }
         
         return result;

@@ -28,6 +28,9 @@ import weka.filters.unsupervised.attribute.Reorder;
  * @author Shen Wei
  */
 public class DatasetPreprocessor {
+    
+    public static final Random randomSeed = new Random();
+    
     public static Instances getBalancedDataset(
             Instances dataset, 
             boolean oversampling,
@@ -70,7 +73,7 @@ public class DatasetPreprocessor {
             Enumeration enm = isoSet.enumerateInstances();
             
             //randomize data set
-            isoSet.randomize(new Random());
+            isoSet.randomize(randomSeed);
             
             //over sampling
             if (oversampling) {
@@ -429,5 +432,21 @@ public class DatasetPreprocessor {
     public static void appendAttribute(
             Instances dataset, Attribute classAttribute) {
         dataset.insertAttributeAt(classAttribute, dataset.numAttributes());
+    }
+    
+    public static Instances bootstrapResample(Instances dataset) {
+        Instances tmp = new Instances(dataset), newSet;
+        tmp.randomize(randomSeed);
+        int n = (int) Math.ceil(tmp.numInstances() * 0.632);
+        final int N = dataset.numInstances();
+        
+        newSet = new Instances(tmp, 0, n);
+        
+        n = newSet.numInstances();
+        while (newSet.numInstances() < N) {
+            newSet.add(newSet.instance(randomSeed.nextInt(n)));
+        }
+        
+        return newSet;
     }
 }

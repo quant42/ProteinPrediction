@@ -397,7 +397,6 @@ public class Main {
         System.err.println("Training model ...");
         MetaPredictor predictor = new MetaPredictor();
         predictor.train(dataset);
-        predictor.saveModel();
 
         System.err.println("All done! Please check out files in directory: "
                 + ProgramSettings.MODEL_DIR);
@@ -422,7 +421,6 @@ public class Main {
 
         System.err.println("Loading prediction model ...");
         MetaPredictor predictor = new MetaPredictor();
-        predictor.loadModel();
 
         System.err.println("Predicting ...");
         dataset.setClassIndex(dataset.numAttributes() - 1);
