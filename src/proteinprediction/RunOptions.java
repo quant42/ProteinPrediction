@@ -20,7 +20,8 @@ class RunOptions {
         ACTION_DATA,
         ACTION_HELP,
         ACTION_TRAIN_META,
-        ACTION_PREDICT_META
+        ACTION_PREDICT_META,
+        ACTION_VALIDATE_META
     };
     
     public static final String MODE_TRAIN = "train";
@@ -29,6 +30,7 @@ class RunOptions {
     public static final String MODE_DATA = "prepareData";
     public static final String MODE_TRAIN_META = "trainMeta";
     public static final String MODE_PREDICT_META = "predictMeta";
+    public static final String MODE_VALIDATE_META = "validateMeta";
     //public static final String MODE_HELP = "|-h|--help|-help|-?|help|";
     
     /**
@@ -93,6 +95,9 @@ class RunOptions {
                 if (args.length > 3) {
                     option.outputFasta = args[3];
                 }
+            } else if (mode.equals(MODE_VALIDATE_META)) {
+                option.action = RunActions.ACTION_VALIDATE_META;
+                option.outputStatistics = args[2];
             } else {
                 option.action = RunActions.ACTION_HELP;
             }
@@ -133,6 +138,7 @@ class RunOptions {
         
         sb.append("    trainMeta <train_set.arff>\n");
         sb.append("    predictMeta <input.arff> <result_output.arff> [output.fasta]\n");
+        sb.append("    validateMeta <input.arff> <statistics.txt>\n");
         sb.append("    -h|--help|-help|-?|help\n\n");
         
         sb.append("Examples:\n");

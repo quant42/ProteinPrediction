@@ -24,7 +24,9 @@ import weka.core.Instances;
 import weka.core.converters.ArffSaver;
 import java.util.LinkedList;
 import java.util.List;
+import proteinprediction.io.BootstrapModelReader;
 import proteinprediction.prediction.MetaPredictor;
+import proteinprediction.utils.evaluation.QualityMeasure;
 
 /**
  * Entry point of predictors
@@ -77,6 +79,9 @@ public class Main {
             } else if (option.getRunAction() == RunActions.ACTION_PREDICT_META) {
                 //prediction through meta predictor
                 predictMetaPredictor(option);
+            } else if (option.getRunAction() == RunActions.ACTION_VALIDATE_META) {
+                //validate meta predictor
+                validateMetaPredictor(option);
             } else {
                 //show help
                 showHelp();
@@ -459,5 +464,66 @@ public class Main {
         saver.setFile(new File(ProgramSettings.RESULT_DIR, outputArff));
         saver.setInstances(original);
         saver.writeBatch();
+    }
+    
+    /**
+     * validate each models in meta-predictor and writes out performance of each
+     * model.
+     * @param options 
+     */
+    private static void validateMetaPredictor(RunOptions options) 
+    throws Exception {
+        String inputArff = options.inputArff;
+        String outputTxt = options.outputStatistics;
+        
+        PrintWriter writer = new PrintWriter(
+                new TeeOutputStream(
+                    System.out,
+                    new FileOutputStream(outputTxt)
+                ));
+        
+        System.err.println("Loading data ...");
+        Instances dataset = new Instances(new FileReader(inputArff));
+        dataset.setClassIndex(dataset.numAttributes() - 1);
+        
+        System.err.println("Check and reduce data space ...");
+        String features = loadSelectedAttributes();
+        String featureIDs =
+                getIndicesOfSelectedFeatures(dataset, features.split(","));
+        dataset = DatasetPreprocessor.selectFeatures(
+                dataset, featureIDs);
+        
+        final double goldenSet[] = 
+                DatasetPreprocessor.getClassLabels(dataset, dataset.numAttributes() - 1);
+        
+        MetaPredictor meta = new MetaPredictor();
+        BootstrapModelReader reader = new BootstrapModelReader(meta.modelsFile);
+        for (int i = 0; i < MetaPredictor.ROUNDS; i++) {
+            System.err.println(
+                    String.format(
+                    "Predicting and evaluating: (%d/%d)",
+                    (i+1), MetaPredictor.ROUNDS));
+            
+            MainPredictor predictor = reader.read();
+            double[] prediction = predictor.predict(dataset);
+            
+            QualityMeasure q = new QualityMeasure(dataset, goldenSet);
+            
+            writer.println(
+                    String.format(
+                    "Performance: %d",
+                    (i+1)));
+            for (int j = 0; j < dataset.classAttribute().numValues(); j++) {
+                writer.println(
+                    String.format("%s: %.3f", 
+                        dataset.classAttribute().value(j),
+                        q.mcc(prediction)[j])
+                        );
+            }
+        }
+        
+        writer.flush();
+        writer.close();
+        
     }
 }

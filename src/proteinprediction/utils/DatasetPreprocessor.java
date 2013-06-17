@@ -449,4 +449,8 @@ public class DatasetPreprocessor {
         
         return newSet;
     }
+
+    public static double[] getClassLabels(Instances dataset, int classIndex) {
+        return dataset.attributeToDoubleArray(classIndex);
+    }
 }

@@ -6,16 +6,11 @@ package proteinprediction.prediction;
 
 import java.io.EOFException;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Random;
-import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
-import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
 import proteinprediction.ProgramSettings;
+import proteinprediction.io.BootstrapModelReader;
+import proteinprediction.io.BootstrapModelWriter;
 import proteinprediction.utils.DatasetGenerator;
 import proteinprediction.utils.DatasetPreprocessor;
 import weka.core.Attribute;
@@ -45,9 +40,8 @@ public class MetaPredictor implements Serializable {
 
     public void train(Instances dataset) throws IOException {
         this.modelsFile.delete();
-        ObjectOutputStream os = new ObjectOutputStream(
-                new XZCompressorOutputStream(
-                new FileOutputStream(this.modelsFile)));
+        BootstrapModelWriter writer = 
+                new BootstrapModelWriter(this.modelsFile);
         for (int i = 0; i < ROUNDS; i++) {
             Instances sample = DatasetPreprocessor.bootstrapResample(dataset);
             try {
@@ -56,36 +50,33 @@ public class MetaPredictor implements Serializable {
                 );
                 MainPredictor predictor = new MainPredictor();
                 predictor.train(sample);
-                os.writeObject(predictor);
-                os.reset();
+                writer.write(predictor);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
-        os.flush();
-        os.close();
+        writer.flush();
+        writer.close();
     }
 
     public double[] predict(Instances dataset) throws IOException, Exception {
         
         double[] result = new double[dataset.numInstances()];
         this.scores = new double[result.length];
-        ObjectInputStream is = new ObjectInputStream(
-                new XZCompressorInputStream(
-                new FileInputStream(this.modelsFile)));
+        BootstrapModelReader reader = new BootstrapModelReader(this.modelsFile);
         int N = 0;
         for (int i = 0; i < ROUNDS; i++) {
             System.err.println(
                     String.format("Predicting: Round (%d/%d)", i+1, ROUNDS));
             try {
-                MainPredictor predictor = (MainPredictor) is.readObject();
+                MainPredictor predictor = reader.read();
                 addTo(result, predictor.predict(dataset));
                 N++;
             } catch (EOFException e) {
             }
         }
         
-        is.close();
+        reader.close();
         
         for (int i = 0; i < result.length; i++) {
             scores[i] = 1.0 - result[i] / result.length;
