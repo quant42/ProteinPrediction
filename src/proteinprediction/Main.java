@@ -132,7 +132,7 @@ public class Main {
             try {
                 FastaWriter fw = new FastaWriter(new File(
                         ProgramSettings.RESULT_DIR, outputFasta));
-                fw.writeDataset(original, result);
+                fw.writeDataset(original, result, null);
                 fw.close();
             } catch (Exception e) {
                 System.err.println("Error writing Fasta output!");
@@ -433,7 +433,7 @@ public class Main {
             try {
                 FastaWriter fw = new FastaWriter(new File(
                         ProgramSettings.RESULT_DIR, outputFasta));
-                fw.writeDataset(original, result);
+                fw.writeDataset(original, result, null);
                 fw.close();
             } catch (Exception e) {
                 System.err.println("Error writing Fasta output!");
