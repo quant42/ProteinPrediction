@@ -43,6 +43,7 @@ class RunOptions {
     public String outputStatistics;
     public int features;
     public String weights;
+    public String fastaSeqIn = null;
     
     protected RunOptions() {
         this.features = ProgramSettings.NUM_ATTRS;
@@ -69,6 +70,9 @@ class RunOptions {
                 option.outputArff = args[2];
                 if (args.length > 3) {
                     option.outputFasta = args[3];
+                }
+                if(args.length > 4) {
+                    option.fastaSeqIn = args[4];
                 }
                 
             } else if (mode.equals(MODE_VALIDATE)) {

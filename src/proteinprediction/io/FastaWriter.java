@@ -51,7 +51,7 @@ public class FastaWriter {
      * analyse dataset and its prediction
      */
     public void writeDataset(Instances original, double[] prediction, File fastaFile) throws Exception {
-        boolean boolSeq = (fastaFile != null); // TODO: toChange!!!
+        boolean boolSeq = (fastaFile != null);
         LinkedList<Data> fasta = new LinkedList<Data>();
         FastVector vec = DatasetGenerator.getClassLabels();
         // saveall instances in new "datastructure"
@@ -63,7 +63,7 @@ public class FastaWriter {
                 System.err.println("ID_POS ATTRIBUTE WAS NOT FOUND! PLEASE GIVE ME SUCH!");
             }
             String ppName = ppNamePos.substring(0, splitPos);
-            char as = ' ';// TODO: if as seq is expected
+            char as = ' ';
             int pos = Integer.parseInt(ppNamePos.substring(splitPos + 1));
             if (boolSeq) {
                 as = getSeq(ppName, fastaFile).charAt(pos);
@@ -139,5 +139,11 @@ public class FastaWriter {
                 return this.pos - d.pos;
             }
         }
+    }
+    
+    public static void main(String[] args) throws Exception {
+        FastaWriter fw = new FastaWriter(new File(""));
+        fw.writeDataset(null, null, null);
+        fw.close();
     }
 }
