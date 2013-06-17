@@ -24,9 +24,34 @@ public class FastaWriter {
     }
 
     /**
+     * reads a protein seq from a file
+     */
+    private String getSeq(String seqId, File fastaFile) throws Exception {
+        BufferedReader bf = new BufferedReader(new FileReader(fastaFile));
+        String result = new String(), line;
+        boolean found = false;
+        while ((line = bf.readLine()) != null) {
+            line = line.trim();
+            if (line.startsWith(">")) {
+                if (line.startsWith(">" + seqId)) {
+                    found = true;
+                } else if(found) {
+                    break;
+                }
+            }
+            if(found) {
+                result += line;
+            }
+        }
+        bf.close();
+        return result;
+    }
+
+    /**
      * analyse dataset and its prediction
      */
-    public void writeDataset(Instances original, double[] prediction) throws Exception {
+    public void writeDataset(Instances original, double[] prediction, File fastaFile) throws Exception {
+        boolean boolSeq = (fastaFile != null);
         LinkedList<Data> fasta = new LinkedList<Data>();
         FastVector vec = DatasetGenerator.getClassLabels();
         // saveall instances in new "datastructure"
@@ -34,12 +59,15 @@ public class FastaWriter {
             Instance curr = original.instance(i);
             String ppNamePos = curr.stringValue(0);
             int splitPos = ppNamePos.lastIndexOf("_");
-            if(splitPos == -1) {
+            if (splitPos == -1) {
                 System.err.println("ID_POS ATTRIBUTE WAS NOT FOUND! PLEASE GIVE ME SUCH!");
             }
             String ppName = ppNamePos.substring(0, splitPos);
-            char as = ' ';// TODO: if as seq is expected
+            char as = ' ';
             int pos = Integer.parseInt(ppNamePos.substring(splitPos + 1));
+            if (boolSeq) {
+                as = getSeq(ppName, fastaFile).charAt(pos);
+            }
             fasta.add(new Data(ppName, pos, as, ((String) vec.elementAt((int) prediction[i])).charAt(0)));
         }
         // sort the "datasetstructure"
@@ -52,7 +80,7 @@ public class FastaWriter {
         for (Data d : fasta) {
             if (flag && !ppName.equals(d.proteinName)) {
                 // write to file
-                writeProtein(ppName, seq, pred);
+                writeProtein(ppName, seq, pred, boolSeq);
                 // clear
                 ppName = new String();
                 seq = new String();
@@ -63,15 +91,17 @@ public class FastaWriter {
             pred += d.prediction;
             flag = true;
         }
-        writeProtein(ppName, seq, pred);
+        writeProtein(ppName, seq, pred, boolSeq);
     }
 
     /**
      * write proteins name, sequence and prediction to file
      */
-    public void writeProtein(String name, String seq, String prediction) throws Exception {
+    public void writeProtein(String name, String seq, String prediction, boolean boolSeq) throws Exception {
         out.write(">" + name + "\n");
-        //out.write(seq + "\n");// TODO: uncomment, if as seq is expected!
+        if (boolSeq) {
+            out.write(seq + "\n");// TODO: uncomment, if as seq is expected!
+        }
         out.write(prediction + "\n");
     }
 
@@ -109,5 +139,11 @@ public class FastaWriter {
                 return this.pos - d.pos;
             }
         }
+    }
+    
+    public static void main(String[] args) throws Exception {
+        FastaWriter fw = new FastaWriter(new File(""));
+        fw.writeDataset(null, null, null);
+        fw.close();
     }
 }

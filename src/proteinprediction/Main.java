@@ -30,6 +30,7 @@ import proteinprediction.utils.evaluation.QualityMeasure;
 
 /**
  * Entry point of predictors
+ *
  * @author Shen Wei
  */
 public class Main {
@@ -43,7 +44,6 @@ public class Main {
      * attribute name of prediction result
      */
     public static final String predictionResultAttr = "TMH_TML_prediction";
-    
     /**
      * attribute name for prediction scores
      */
@@ -51,7 +51,8 @@ public class Main {
 
     /**
      * main entry point
-     * @param args 
+     *
+     * @param args
      */
     public static void main(String[] args) {
 
@@ -103,7 +104,8 @@ public class Main {
 
     /**
      * perform predictions
-     * @param option 
+     *
+     * @param option
      */
     private static void predict(RunOptions option)
             throws IOException, ClassNotFoundException, Exception {
@@ -137,7 +139,8 @@ public class Main {
             try {
                 FastaWriter fw = new FastaWriter(new File(
                         ProgramSettings.RESULT_DIR, outputFasta));
-                fw.writeDataset(original, result);
+                File fastaIn = (option.fastaSeqIn == null) ? null : new File(option.fastaSeqIn);
+                fw.writeDataset(original, result, fastaIn);
                 fw.close();
             } catch (Exception e) {
                 System.err.println("Error writing Fasta output!");
@@ -145,24 +148,24 @@ public class Main {
                 e.printStackTrace();
             }
         }
-        
+
         //add low-level prediction scores
         List<double[]> lowlevelScores = predictor.getLowlevelPredictionScores();
         int scoreIndices[] = new int[lowlevelScores.size()];
         for (int i = 0; i < predictor.predictors.length; i++) {
             String attrName = String.format(
-                    "%s_%s", 
+                    "%s_%s",
                     predictor.predictors[i].getClass().getSimpleName(),
                     "score");
             scoreIndices[i] = original.numAttributes();
             original.insertAttributeAt(
-                    new Attribute(attrName), 
+                    new Attribute(attrName),
                     original.numAttributes());
         }
-        
+
         //add prediction score into original data set
         original.insertAttributeAt(
-                new Attribute(predictionScoreAttr), 
+                new Attribute(predictionScoreAttr),
                 original.numAttributes());
         //add prediction result into original data set
         original.insertAttributeAt(
@@ -174,10 +177,10 @@ public class Main {
         for (int i = 0; i < result.length; i++) {
             original.instance(i).setValue(original.classIndex() - 1, scores[i]);
             original.instance(i).setClassValue(result[i]);
-            
+
             for (int j = 0; j < lowlevelScores.size(); j++) {
                 original.instance(i).setValue(
-                        scoreIndices[j], 
+                        scoreIndices[j],
                         lowlevelScores.get(j)[i]);
             }
         }
@@ -266,7 +269,8 @@ public class Main {
 
     /**
      * prepare data for training, testing etc.
-     * @param option 
+     *
+     * @param option
      */
     private static void prepareData(RunOptions option) throws IOException, Exception {
         String inputArff = option.inputArff;
@@ -278,7 +282,7 @@ public class Main {
         System.err.println("Loading data set ...");
         DatasetGenerator dg = new DatasetGenerator(
                 new File(inputArff), new File(inputFasta));
-        
+
         //introduce class labels but do not remove string attributes
         Instances dataset = dg.generateDataset(false);
 
@@ -286,7 +290,7 @@ public class Main {
         saver1.setFile(new File(ProgramSettings.DATASET_DIR, "generated_raw_dataset.arff"));
         saver1.setInstances(dataset);
         saver1.writeBatch();
-        
+
         //remove string attributes before feature selection
         dataset.deleteStringAttributes();
 
@@ -328,8 +332,9 @@ public class Main {
 
     /**
      * get set of attribute names from a data set
+     *
      * @param dataset
-     * @return 
+     * @return
      */
     private static String[] getAttributeSet(Instances dataset) {
         String[] features = new String[dataset.numAttributes()];
@@ -342,8 +347,9 @@ public class Main {
 
     /**
      * write list of selected attributes
+     *
      * @param attrNames
-     * @throws IOException 
+     * @throws IOException
      */
     private static void writeSelectedAttributes(String[] attrNames)
             throws IOException {
@@ -355,8 +361,9 @@ public class Main {
 
     /**
      * load list of selected features from the training set
+     *
      * @return
-     * @throws IOException 
+     * @throws IOException
      */
     private static String loadSelectedAttributes()
             throws IOException {
@@ -369,30 +376,32 @@ public class Main {
 
     /**
      * get indices of selected features in the given data set
+     *
      * @param dataset
      * @param features
-     * @return 
+     * @return
      */
     private static String getIndicesOfSelectedFeatures(
             Instances dataset, String[] features) {
         LinkedList<Integer> ids = new LinkedList<Integer>();
         for (int i = 0; i < features.length; i++) {
             Attribute attr = dataset.attribute(features[i]);
-            if (attr != null)
+            if (attr != null) {
                 ids.add(attr.index() + 1);
-            else
+            } else {
                 ids.add(dataset.numAttributes());
+            }
         }
         return StringUtils.join(ids, ',');
     }
 
-    private static void trainMetaPredictor(RunOptions option) 
-    throws Exception {
+    private static void trainMetaPredictor(RunOptions option)
+            throws Exception {
         String inputArff = option.inputArff;
 
         System.err.println("Loading data set ...");
         Instances dataset = new Instances(new FileReader(inputArff));
-        
+
         //gather list of selected attributes
         String[] attrNames = getAttributeSet(dataset);
         //write 
@@ -407,8 +416,8 @@ public class Main {
                 + ProgramSettings.MODEL_DIR);
     }
 
-    private static void predictMetaPredictor(RunOptions option) 
-    throws Exception {
+    private static void predictMetaPredictor(RunOptions option)
+            throws Exception {
         String inputArff = option.inputArff;
         String outputArff = option.outputArff;
         String outputFasta = option.outputFasta;
@@ -438,7 +447,7 @@ public class Main {
             try {
                 FastaWriter fw = new FastaWriter(new File(
                         ProgramSettings.RESULT_DIR, outputFasta));
-                fw.writeDataset(original, result);
+                fw.writeDataset(original, result, null);
                 fw.close();
             } catch (Exception e) {
                 System.err.println("Error writing Fasta output!");
@@ -446,10 +455,10 @@ public class Main {
                 e.printStackTrace();
             }
         }
-        
+
         //add prediction score into original data set
         original.insertAttributeAt(
-                new Attribute(predictionScoreAttr), 
+                new Attribute(predictionScoreAttr),
                 original.numAttributes());
         //add prediction result into original data set
         original.insertAttributeAt(
