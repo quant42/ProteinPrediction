@@ -33,13 +33,12 @@ public class FastaWriter {
         while ((line = bf.readLine()) != null) {
             line = line.trim();
             if (line.startsWith(">")) {
-                if (line.startsWith(">" + seqId)) {
+                if (line.contains(seqId)) {
                     found = true;
-                } else if(found) {
+                } else if (found) {
                     break;
                 }
-            }
-            if(found) {
+            } else if (found) {
                 result += line;
             }
         }
@@ -66,7 +65,12 @@ public class FastaWriter {
             char as = ' ';
             int pos = Integer.parseInt(ppNamePos.substring(splitPos + 1));
             if (boolSeq) {
-                as = getSeq(ppName, fastaFile).charAt(pos);
+                String l = getSeq(ppName, fastaFile);
+                if (l.length() > pos) {
+                    as = l.charAt(pos);
+                } else {
+                    as = ' ';
+                }
             }
             fasta.add(new Data(ppName, pos, as, ((String) vec.elementAt((int) prediction[i])).charAt(0)));
         }
@@ -100,7 +104,7 @@ public class FastaWriter {
     public void writeProtein(String name, String seq, String prediction, boolean boolSeq) throws Exception {
         out.write(">" + name + "\n");
         if (boolSeq) {
-            out.write(seq + "\n");// TODO: uncomment, if as seq is expected!
+            out.write(seq + "\n");
         }
         out.write(prediction + "\n");
     }
@@ -140,7 +144,7 @@ public class FastaWriter {
             }
         }
     }
-    
+
     public static void main(String[] args) throws Exception {
         FastaWriter fw = new FastaWriter(new File(""));
         fw.writeDataset(null, null, null);
