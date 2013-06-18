@@ -29,17 +29,14 @@ public class FastaWriter {
     private String getSeq(String seqId, File fastaFile) throws Exception {
         BufferedReader bf = new BufferedReader(new FileReader(fastaFile));
         String result = new String(), line;
-        boolean found = false;
         while ((line = bf.readLine()) != null) {
             line = line.trim();
             if (line.startsWith(">")) {
                 if (line.contains(seqId)) {
-                    found = true;
-                } else if (found) {
-                    break;
+                    result = bf.readLine();
+                    bf.close();
+                    return result;
                 }
-            } else if (found) {
-                result += line;
             }
         }
         bf.close();
@@ -100,10 +97,9 @@ public class FastaWriter {
         }
         writeProtein(ppName, seq, pred, conv, boolSeq, boolConv);
     }
-    
+
     private static char doubleToChar(double conv) {
-        int r = (int) (conv * 10);
-        return ((char) (r + 48));
+        return ((char) (33 + (int) Math.round(conv)));
     }
 
     /**
@@ -142,6 +138,7 @@ public class FastaWriter {
             this.proteinName = proteinName;
             this.pos = pos;
             this.as = as;
+            this.conv = conv;
             this.prediction = prediction;
         }
 
