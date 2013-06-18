@@ -46,6 +46,7 @@ class RunOptions {
     public int features;
     public String weights;
     public String fastaSeqIn = null;
+    public boolean outConvInFasta = false;
     
     protected RunOptions() {
         this.features = ProgramSettings.NUM_ATTRS;
@@ -74,7 +75,10 @@ class RunOptions {
                     option.outputFasta = args[3];
                 }
                 if(args.length > 4) {
-                    option.fastaSeqIn = args[4];
+                    option.outConvInFasta = Boolean.parseBoolean(args[4]);
+                }
+                if(args.length > 5) {
+                    option.fastaSeqIn = args[5];
                 }
                 
             } else if (mode.equals(MODE_VALIDATE)) {

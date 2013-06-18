@@ -49,7 +49,7 @@ public class FastaWriter {
     /**
      * analyse dataset and its prediction
      */
-    public void writeDataset(Instances original, double[] prediction, File fastaFile) throws Exception {
+    public void writeDataset(Instances original, double[] prediction, File fastaFile, double[] scores, boolean boolConv) throws Exception {
         boolean boolSeq = (fastaFile != null);
         LinkedList<Data> fasta = new LinkedList<Data>();
         FastVector vec = DatasetGenerator.getClassLabels();
@@ -72,7 +72,7 @@ public class FastaWriter {
                     as = ' ';
                 }
             }
-            fasta.add(new Data(ppName, pos, as, ((String) vec.elementAt((int) prediction[i])).charAt(0)));
+            fasta.add(new Data(ppName, pos, as, ((String) vec.elementAt((int) prediction[i])).charAt(0), scores[i]));
         }
         // sort the "datasetstructure"
         Collections.sort(fasta);
@@ -81,32 +81,43 @@ public class FastaWriter {
         String ppName = new String();
         String seq = new String();
         String pred = new String();
+        String conv = new String();
         for (Data d : fasta) {
             if (flag && !ppName.equals(d.proteinName)) {
                 // write to file
-                writeProtein(ppName, seq, pred, boolSeq);
+                writeProtein(ppName, seq, pred, conv, boolSeq, boolConv);
                 // clear
                 ppName = new String();
                 seq = new String();
                 pred = new String();
+                conv = new String();
             }
             ppName = d.proteinName;
             seq += d.as;
             pred += d.prediction;
+            conv += doubleToChar(d.conv);
             flag = true;
         }
-        writeProtein(ppName, seq, pred, boolSeq);
+        writeProtein(ppName, seq, pred, conv, boolSeq, boolConv);
+    }
+    
+    private static char doubleToChar(double conv) {
+        int r = (int) (conv * 10);
+        return ((char) (r + 48));
     }
 
     /**
      * write proteins name, sequence and prediction to file
      */
-    public void writeProtein(String name, String seq, String prediction, boolean boolSeq) throws Exception {
+    public void writeProtein(String name, String seq, String prediction, String conv, boolean boolSeq, boolean boolConv) throws Exception {
         out.write(">" + name + "\n");
         if (boolSeq) {
             out.write(seq + "\n");
         }
         out.write(prediction + "\n");
+        if (boolConv) {
+            out.write(conv + "\n");
+        }
     }
 
     /**
@@ -124,9 +135,10 @@ public class FastaWriter {
         public String proteinName;
         public int pos;
         public char as;
+        public double conv;
         public char prediction;
 
-        public Data(String proteinName, int pos, char as, char prediction) {
+        public Data(String proteinName, int pos, char as, char prediction, double conv) {
             this.proteinName = proteinName;
             this.pos = pos;
             this.as = as;
@@ -143,11 +155,5 @@ public class FastaWriter {
                 return this.pos - d.pos;
             }
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        FastaWriter fw = new FastaWriter(new File(""));
-        fw.writeDataset(null, null, null);
-        fw.close();
     }
 }
