@@ -298,8 +298,15 @@ public class Main {
         System.err.println("Selecting features ...");
         Instances fullBalanced = DatasetPreprocessor.getBalancedDataset(
                 dataset, true, dataset.numAttributes() - 1);
-        String selected = DatasetPreprocessor.featureIndicesStringSelection(
+        
+        String selected;
+        if (features >= dataset.numAttributes()) {
+            selected = "first-last";
+        } else {
+            selected = DatasetPreprocessor.featureIndicesStringSelection(
                 fullBalanced, fullBalanced.numAttributes() - 1, features);
+        }
+        
         //include class attribute
         selected = selected.replaceAll(",[^,]+$", ",last");
 
@@ -497,6 +504,7 @@ public class Main {
         System.err.println("Loading data ...");
         Instances dataset = new Instances(new FileReader(inputArff));
         dataset.setClassIndex(dataset.numAttributes() - 1);
+        Instances orig = dataset;
         
         System.err.println("Check and reduce data space ...");
         String features = loadSelectedAttributes();
@@ -504,7 +512,6 @@ public class Main {
                 getIndicesOfSelectedFeatures(dataset, features.split(","));
         dataset = DatasetPreprocessor.selectFeatures(
                 dataset, featureIDs);
-        
         final double goldenSet[] = 
                 DatasetPreprocessor.getClassLabels(dataset, dataset.numAttributes() - 1);
         
@@ -519,7 +526,7 @@ public class Main {
             MainPredictor predictor = reader.read();
             double[] prediction = predictor.predict(dataset);
             
-            QualityMeasure q = new QualityMeasure(dataset, goldenSet);
+            QualityMeasure q = new QualityMeasure(orig, goldenSet);
             
             writer.println(
                     String.format(
@@ -532,6 +539,8 @@ public class Main {
                         q.mcc(prediction)[j])
                         );
             }
+            writer.println(
+                    String.format("Q2: %.3f", q.q2(prediction)));
         }
         
         writer.flush();

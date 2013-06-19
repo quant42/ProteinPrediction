@@ -4,6 +4,11 @@
  */
 package proteinprediction.utils.evaluation;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import weka.core.Attribute;
+import weka.core.Instance;
 import weka.core.Instances;
 
 /**
@@ -33,11 +38,59 @@ public class QualityMeasure {
      * protein-wise comparison. (Each protein is the smallest unit here)
      * @return 
      */
-    public double[] q2(double[] predictions) {
-        double[] results = new double[2];
+    public double q2(double[] predictions) {
+        double results = 0;
+        //get proteins
+        HashMap<Integer, String> instProt = getInstanceToProteinMapping();
+        HashMap<String, Integer> proteins = new HashMap<String, Integer>(); 
         
+        int protIdx = 0;
+        for (String prot : new HashSet<String>(instProt.values())) {
+            proteins.put(prot, protIdx++);
+        }
+        
+        final int N = proteins.size();
+        
+        //confusion "matrix"
+        double tp[] = new double[N], 
+               tn[] = new double[N], 
+               fp[] = new double[N], 
+               fn[] = new double[N],
+               q2[] = new double[N];
+        
+        //get confusion "matrix" for each PROTEIN
+        for (int i = 0; i < dataset.numInstances(); i++) {
+            double gold = this.goldenStandard[i];
+            double pred = predictions[i];
+            int prot = proteins.get(instProt.get(i));
+            if (gold == pred) {
+                if (gold == 0) {
+                    tp[prot]++;
+                } else {
+                    tn[prot]++;
+                }
+            } else {
+                if (gold == 0) {
+                    fn[prot]++;
+                } else {
+                    fp[prot]++;
+                }
+            }
+        }
+        
+        //compute q2
+        for (int i = 0; i < N; i++) {
+            q2[i] = (tp[i] + tn[i]) / (tp[i] + fp[i] + tn[i] + fn[i]);
+        }
+        
+        for (double qTwo : q2) {
+            results += qTwo;
+        }
+        results /= N;
         return results;
     }
+    
+    
     
     
     /**
@@ -79,6 +132,22 @@ public class QualityMeasure {
     public double[] qtop(double[] predictions) {
        double[] results = new double[2];
        return results; 
+    }
+
+    /**
+     * get mapping from instance index to protein
+     * @return 
+     */
+    private HashMap<Integer, String> getInstanceToProteinMapping() {
+        HashMap<Integer, String> map = new HashMap<Integer, String>();
+        for (int i = 0; i < dataset.numInstances(); i++) {
+            Instance inst = dataset.instance(i);
+            String isPosStr = inst.stringValue(0);
+            int end = isPosStr.lastIndexOf('_');
+            String id = isPosStr.substring(0, end);
+            map.put(i, id);
+        }
+        return map;
     }
     
 }
