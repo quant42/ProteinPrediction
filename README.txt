@@ -15,7 +15,7 @@ Train predictor:
 	java -jar ProteinPrediction.jar train <training_set.arff> [features]
 
 Perform prediction:
-	java -jar ProteinPrediction.jar predict <input.arff> <result_output.arff> [output.fasta]
+	java -jar ProteinPrediction.jar predict <input.arff> <result_output.arff> [output.fasta] [include scores in fasta=true/false] [dictionary.fasta]
 
 Perform validation:
 	java -jar ProteinPrediction.jar validate <validation_set.arff> [statistics]
@@ -57,7 +57,9 @@ Run modes:
 
 	predict - This run mode performs prediction over set of instances using
 	trained models. Classification results are appended to the input data. New
-	class attribute names "TMH_TML".
+	class attribute names "TMH_TML". There's the posibility to output the neuronal
+	network confidence in the fasta file. The confidence character is calculated
+	with (40 + round(conv * 80))).
 
 Data folders:
 	Files used by this program are organized in a series of folders. After
