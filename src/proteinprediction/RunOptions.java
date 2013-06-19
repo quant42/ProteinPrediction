@@ -145,7 +145,7 @@ class RunOptions {
         sb.append("    validate <validation_set.arff> [statistics.txt]\n");
         
         sb.append("    trainMeta <train_set.arff>\n");
-        sb.append("    predictMeta <input.arff> <result_output.arff> [output.fasta]\n");
+        sb.append("    predictMeta <input.arff> <result_output.arff> [output.fasta] [include scores in fasta=true/false] [dictionary.fasta]\n");
         sb.append("    validateMeta <input.arff> <statistics.txt>\n");
         sb.append("    -h|--help|-help|-?|help\n\n");
         

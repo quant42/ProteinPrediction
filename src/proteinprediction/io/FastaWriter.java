@@ -99,7 +99,7 @@ public class FastaWriter {
     }
 
     private static char doubleToChar(double conv) {
-        return ((char) (33 + (int) Math.round(conv)));
+        return ((char) (33 + (int) Math.round(conv * 50)));
     }
 
     /**
