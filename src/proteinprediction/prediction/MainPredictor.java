@@ -41,7 +41,6 @@ public class MainPredictor implements Serializable {
      * stores prediction scores
      */
     private double[] scores = null;
-    private double[] scores2 = null;
     /**
      * scores of low-level predictors
      */
@@ -140,14 +139,12 @@ public class MainPredictor implements Serializable {
 
         double[] values = new double[this.highlevelSet.numInstances()];
         this.scores = new double[values.length];
-        this.scores2 = new double[values.length];
         for (int i = 0; i < values.length; i++) {
             Instance inst = highlevelSet.instance(i);
             
             values[i] = this.neuralNetwork.predictInstance(inst);
             double distribution[] = neuralNetwork.classifier
                     .distributionForInstance(inst);
-            scores2[i] = values[i];
             this.scores[i] = distribution[(int) values[i]];
         }
         return values;
@@ -249,18 +246,6 @@ public class MainPredictor implements Serializable {
             throw new IllegalStateException("Prediction not performed!");
         }
         return this.scores;
-    }
-
-    /**
-     * get special scores for prediction
-     *
-     * @return
-     */
-    public double[] getPredictionScores2() {
-        if (this.scores2 == null) {
-            throw new IllegalStateException("Prediction not performed!");
-        }
-        return this.scores2;
     }
     
     /**
