@@ -47,6 +47,7 @@ class RunOptions {
     public String weights;
     public String fastaSeqIn = null;
     public boolean outConvInFasta = false;
+    public boolean balanceInput = false;
     
     protected RunOptions() {
         this.features = ProgramSettings.NUM_ATTRS;
@@ -106,6 +107,10 @@ class RunOptions {
             } else if (mode.equals(MODE_VALIDATE_META)) {
                 option.action = RunActions.ACTION_VALIDATE_META;
                 option.outputStatistics = args[2];
+                
+                if (args.length > 3) {
+                    option.balanceInput = Boolean.parseBoolean(args[3]);
+                }
             } else {
                 option.action = RunActions.ACTION_HELP;
             }
@@ -141,12 +146,12 @@ class RunOptions {
         sb.append(ProgramSettings.NUM_ATTRS);
         sb.append("]\n");
         
-        sb.append("    predict <input.arff> <result_output.arff> [output.fasta]\n");
+        sb.append("    predict <input.arff> <result_output.arff> [output.fasta] [include scores in fasta=true/false] [dictionary.fasta]\n");
         sb.append("    validate <validation_set.arff> [statistics.txt]\n");
         
         sb.append("    trainMeta <train_set.arff>\n");
-        sb.append("    predictMeta <input.arff> <result_output.arff> [output.fasta] [include scores in fasta=true/false] [dictionary.fasta]\n");
-        sb.append("    validateMeta <input.arff> <statistics.txt>\n");
+        sb.append("    predictMeta <input.arff> <result_output.arff> [output.fasta]\n");
+        sb.append("    validateMeta <input.arff> <statistics.txt> [balance_input=false]\n");
         sb.append("    -h|--help|-help|-?|help\n\n");
         
         sb.append("Examples:\n");

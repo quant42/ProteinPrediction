@@ -7,6 +7,8 @@ package proteinprediction.utils.evaluation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import proteinprediction.utils.ProteinSegment;
+import proteinprediction.utils.DatasetGenerator;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -64,13 +66,13 @@ public class QualityMeasure {
             double pred = predictions[i];
             int prot = proteins.get(instProt.get(i));
             if (gold == pred) {
-                if (gold == 0) {
+                if (gold == 1) {
                     tp[prot]++;
                 } else {
                     tn[prot]++;
                 }
             } else {
-                if (gold == 0) {
+                if (gold == 1) {
                     fn[prot]++;
                 } else {
                     fp[prot]++;
@@ -98,29 +100,31 @@ public class QualityMeasure {
      * acid residue. (residue-wise)
      * @return 
      */
-    public double[] mcc(double[] predictions) {
-        double tp[] = new double[2], 
-               fp[] = new double[2], 
-               tn[] = new double[2],
-               fn[] = new double[2];
-        double result[] = new double[2];
+    public double mcc(double[] predictions) {
+        double tp = 0, 
+               fp = 0, 
+               tn = 0,
+               fn = 0;
+        double result;
         for (int i = 0; i < predictions.length; i++) {
             double klass = this.goldenStandard[i];
-            int classIdx = (int) klass;
             if (klass == predictions[i]) {
-                tp[classIdx]++;
-                tn[1 - classIdx]++;
+                if (klass == 1) {
+                    tp++;
+                } else {
+                    tn++;
+                }
             } else {
-                fn[classIdx]++;
-                fp[1 - classIdx]++;
+                if (klass == 1) {
+                    fn++;
+                } else {
+                    fp++;
+                }
             }
         }
         
-        for (int i = 0; i < result.length; i++) {
-            result[i] = (tp[i]*tn[i] - fp[i]*fn[i]) /
-                    Math.sqrt((tp[i] + fp[i])*(tp[i]+fn[i])*(tn[i]+fp[i])*(tn[i]+fn[i]));
-        }
-        
+        result = (tp*tn - fp*fn) /
+                Math.sqrt((tp + fp)*(tp+fn)*(tn+fp)*(tn+fn));
         return result;
     }
     
@@ -131,6 +135,76 @@ public class QualityMeasure {
      */
     public double[] qtop(double[] predictions) {
        double[] results = new double[2];
+       // ID_pos attribute
+       Attribute idPos = dataset.attribute("ID_pos");
+        if (idPos == null) {
+            throw new IllegalArgumentException("ID_pos attribute is missing!");
+        }
+       //get golden standard for TMH and TML
+       HashMap<String, ArrayList<ProteinSegment>> tmhs = ProteinSegment.getSegmentsByAttribute(
+               dataset,
+               idPos.index(),
+               this.goldenStandard,
+               DatasetGenerator.getClassLabels().indexOf("H"));
+       
+       HashMap<String, ArrayList<ProteinSegment>> tmls = ProteinSegment.getSegmentsByAttribute(
+               dataset,
+               idPos.index(),
+               this.goldenStandard,
+               DatasetGenerator.getClassLabels().indexOf("L"));
+       
+       //get predictions for TMH and TML
+       HashMap<String, ArrayList<ProteinSegment>> ptmhs = ProteinSegment.getSegmentsByAttribute(
+               dataset, 
+               idPos.index(), 
+               predictions, 
+               DatasetGenerator.getClassLabels().indexOf("H"));
+       HashMap<String, ArrayList<ProteinSegment>> ptmls = ProteinSegment.getSegmentsByAttribute(
+               dataset, 
+               idPos.index(), 
+               predictions, 
+               DatasetGenerator.getClassLabels().indexOf("L"));
+       
+       //compute Qtop for TML
+       final int tmlProts = tmls.keySet().size();
+       ArrayList<String> tmlProteins = new ArrayList<String>();
+       tmlProteins.addAll(tmls.keySet());
+       
+       for (int p = 0; p < tmlProts; p++) {
+           String protein = tmlProteins.get(p);
+           //System.err.println(protein);
+           int correctPreds = getNumberOfCorrectPredictions(
+                   tmls.get(protein), ptmls.get(protein));
+           double qObs  = correctPreds / (double) tmls.get(protein).size();
+           double qPred = correctPreds / (double) ptmls.get(protein).size();
+           if (Math.round(qObs * 100) == 100L 
+                   && Math.round(qPred * 100) == 100L) {
+               results[0]++;
+           }
+       }
+       results[0] /= tmlProts;
+       
+       //compute Qtop for TMH
+       final int tmhProts = tmhs.keySet().size();
+       ArrayList<String> tmhProteins = new ArrayList<String>();
+       tmhProteins.addAll(tmhs.keySet());
+       
+       for (int p = 0; p < tmhProts; p++) {
+           String protein = tmhProteins.get(p);
+           if (ptmhs.get(protein) == null) {
+               continue;
+           }
+           int correctPreds = getNumberOfCorrectPredictions(
+                   tmhs.get(protein), ptmhs.get(protein));
+           double qObs  = correctPreds / (double) tmhs.get(protein).size();
+           double qPred = correctPreds / (double) ptmhs.get(protein).size();
+           if (Math.round(qObs * 100) == 100L 
+                   && Math.round(qPred * 100) == 100L) {
+               results[1]++;
+           }
+       }
+       results[1] /= tmhProts;
+       
        return results; 
     }
 
@@ -140,14 +214,49 @@ public class QualityMeasure {
      */
     private HashMap<Integer, String> getInstanceToProteinMapping() {
         HashMap<Integer, String> map = new HashMap<Integer, String>();
+        Attribute idPos = dataset.attribute("ID_pos");
+        if (idPos == null) {
+            throw new IllegalArgumentException("ID_pos attribute is missing!");
+        }
         for (int i = 0; i < dataset.numInstances(); i++) {
             Instance inst = dataset.instance(i);
-            String isPosStr = inst.stringValue(0);
+            String isPosStr = inst.stringValue(idPos);
             int end = isPosStr.lastIndexOf('_');
             String id = isPosStr.substring(0, end);
             map.put(i, id);
         }
         return map;
     }
-    
+
+    private int getNumberOfCorrectPredictions(
+            ArrayList<ProteinSegment> observation, 
+            ArrayList<ProteinSegment> prediction) {
+        HashSet<ProteinSegment> obsSet = new HashSet();
+        
+        int num = 0;
+        for (int p = 0; p < prediction.size(); p++) {
+            
+            if (obsSet.size() == observation.size()) {
+                //no more correct prediction possible
+                break;
+            }
+            
+            ProteinSegment pred = prediction.get(p);
+            
+            for (int o = 0; o < observation.size(); o++) {
+                ProteinSegment obs = observation.get(o);
+                
+                if (obsSet.contains(obs)) {
+                    continue;
+                } else if (pred.intersectsWith(obs)){
+                    num++;
+                    obsSet.add(obs);
+                    
+                    //prediction can overlap to maximal 1 observation
+                    break;
+                }
+            }
+        }
+        return num;
+    }
 }

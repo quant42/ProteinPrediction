@@ -504,6 +504,15 @@ public class Main {
         System.err.println("Loading data ...");
         Instances dataset = new Instances(new FileReader(inputArff));
         dataset.setClassIndex(dataset.numAttributes() - 1);
+        if (options.balanceInput) {
+            dataset = DatasetPreprocessor.getBalancedDataset(
+                    dataset, true, dataset.classIndex());
+            Attribute idPos = dataset.attribute("ID_pos");
+            if (idPos == null) {
+                throw new IllegalArgumentException("No attribute ID_pos! It is required!");
+            }
+            dataset.sort(idPos);
+        }
         Instances orig = dataset;
         
         System.err.println("Check and reduce data space ...");
@@ -532,15 +541,20 @@ public class Main {
                     String.format(
                     "Performance: %d",
                     (i+1)));
-            for (int j = 0; j < dataset.classAttribute().numValues(); j++) {
-                writer.println(
-                    String.format("%s: %.3f", 
-                        dataset.classAttribute().value(j),
-                        q.mcc(prediction)[j])
-                        );
-            }
             writer.println(
                     String.format("Q2: %.3f", q.q2(prediction)));
+            double[] qtops = q.qtop(prediction);
+            writer.println(
+                    String.format("Q-top(%s): %.3f", 
+                    dataset.classAttribute().value(0),
+                    qtops[0]));
+            writer.println(
+                    String.format("Q-top(%s): %.3f", 
+                    dataset.classAttribute().value(1),
+                    qtops[1]));
+            writer.println(
+                String.format("MCC: %.3f", 
+                    q.mcc(prediction)));
         }
         
         writer.flush();
