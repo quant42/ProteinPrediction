@@ -79,8 +79,16 @@ public class FastaWriter {
         String seq = new String();
         String pred = new String();
         String conv = new String();
+        int pos = 0;
         for (Data d : fasta) {
             if (flag && !ppName.equals(d.proteinName)) {
+                // append missing X
+                String ppSeq = getSeq(ppName, fastaFile);
+                for (int i = seq.length(); i < ppSeq.length(); i++) {
+                    seq += 'X';
+                    pred += 'X';
+                    conv += 'X';
+                }
                 // write to file
                 writeProtein(ppName, seq, pred, conv, boolSeq, boolConv);
                 // clear
@@ -88,19 +96,37 @@ public class FastaWriter {
                 seq = new String();
                 pred = new String();
                 conv = new String();
+                pos = 0;
             }
+            // -
+            if (d.pos != pos) {
+                for (int i = pos; i < d.pos; i++) {
+                    seq += 'X';
+                    pred += 'X';
+                    conv += 'X';
+                }
+            }
+            // -
             ppName = d.proteinName;
             seq += d.as;
             pred += d.prediction;
             conv += doubleToChar(d.conv);
+            // -
             flag = true;
+            pos++;
+        }
+        String ppSeq = getSeq(ppName, fastaFile);
+        for (int i = seq.length(); i < ppSeq.length(); i++) {
+            seq += 'X';
+            pred += 'X';
+            conv += 'X';
         }
         writeProtein(ppName, seq, pred, conv, boolSeq, boolConv);
     }
 
     private static char doubleToChar(double conv) {
 //        System.out.println(conv + " " + ((char) (20 + (int) Math.round(conv * 100))));
-        return ((char) (40 + (int) Math.round(conv * 80)));
+        return ((char) (48 + (int) Math.round(conv * 9)));
     }
 
     /**
