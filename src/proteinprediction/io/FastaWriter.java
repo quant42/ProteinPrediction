@@ -105,6 +105,7 @@ public class FastaWriter {
                     pred += 'X';
                     conv += 'X';
                 }
+                pos = d.pos;
             }
             // -
             ppName = d.proteinName;
