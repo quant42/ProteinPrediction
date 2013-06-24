@@ -83,7 +83,10 @@ public class FastaWriter {
         for (Data d : fasta) {
             if (flag && !ppName.equals(d.proteinName)) {
                 // append missing X
-                String ppSeq = getSeq(ppName, fastaFile);
+                String ppSeq = new String();
+                if (boolSeq) {
+                    getSeq(ppName, fastaFile);
+                }
                 for (int i = seq.length(); i < ppSeq.length(); i++) {
                     seq += 'X';
                     pred += 'X';
@@ -116,7 +119,10 @@ public class FastaWriter {
             flag = true;
             pos++;
         }
-        String ppSeq = getSeq(ppName, fastaFile);
+        String ppSeq = new String();
+        if (boolSeq) {
+            getSeq(ppName, fastaFile);
+        }
         for (int i = seq.length(); i < ppSeq.length(); i++) {
             seq += 'X';
             pred += 'X';
