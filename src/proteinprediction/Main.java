@@ -447,7 +447,6 @@ public class Main {
         dataset.setClassIndex(dataset.numAttributes() - 1);
         double[] result = predictor.predict(dataset);
         double[] scores = predictor.getPredictionScores();
-        double[] scores2 = predictor.getPredictionScores();
 
         System.err.println("Writing results ...");
         // output fasta file
@@ -456,7 +455,7 @@ public class Main {
                 FastaWriter fw = new FastaWriter(new File(
                         ProgramSettings.RESULT_DIR, outputFasta));
                 File fastaIn = (option.fastaSeqIn == null) ? null : new File(option.fastaSeqIn);
-                fw.writeDataset(original, result, null, scores2, option.outConvInFasta);
+                fw.writeDataset(original, result, fastaIn, scores, option.outConvInFasta);
                 fw.close();
                 fw.close();
             } catch (Exception e) {
