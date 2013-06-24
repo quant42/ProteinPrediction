@@ -298,15 +298,15 @@ public class Main {
         System.err.println("Selecting features ...");
         Instances fullBalanced = DatasetPreprocessor.getBalancedDataset(
                 dataset, true, dataset.numAttributes() - 1);
-        
+
         String selected;
         if (features >= dataset.numAttributes()) {
             selected = "first-last";
         } else {
             selected = DatasetPreprocessor.featureIndicesStringSelection(
-                fullBalanced, fullBalanced.numAttributes() - 1, features);
+                    fullBalanced, fullBalanced.numAttributes() - 1, features);
         }
-        
+
         //include class attribute
         selected = selected.replaceAll(",[^,]+$", ",last");
 
@@ -447,17 +447,30 @@ public class Main {
         dataset.setClassIndex(dataset.numAttributes() - 1);
         double[] result = predictor.predict(dataset);
         double[] scores = predictor.getPredictionScores();
-        double[] scores2 = predictor.getPredictionScores();
 
         System.err.println("Writing results ...");
+        // output fasta file
+//        if (outputFasta != null) {
+//            try {
+//                FastaWriter fw = new FastaWriter(new File(
+//                        ProgramSettings.RESULT_DIR, outputFasta));
+//                File fastaIn = (option.fastaSeqIn == null) ? null : new File(option.fastaSeqIn);
+//                fw.writeDataset(original, result, null, scores2, option.outConvInFasta);
+//                fw.close();
+//                fw.close();
+//            } catch (Exception e) {
+//                System.err.println("Error writing Fasta output!");
+//                System.err.println(e);
+//                e.printStackTrace();
+//            }
+//        }
         // output fasta file
         if (outputFasta != null) {
             try {
                 FastaWriter fw = new FastaWriter(new File(
                         ProgramSettings.RESULT_DIR, outputFasta));
                 File fastaIn = (option.fastaSeqIn == null) ? null : new File(option.fastaSeqIn);
-                fw.writeDataset(original, result, null, scores2, option.outConvInFasta);
-                fw.close();
+                fw.writeDataset(original, result, fastaIn, scores, option.outConvInFasta);
                 fw.close();
             } catch (Exception e) {
                 System.err.println("Error writing Fasta output!");
@@ -465,7 +478,6 @@ public class Main {
                 e.printStackTrace();
             }
         }
-
         //add prediction score into original data set
         original.insertAttributeAt(
                 new Attribute(predictionScoreAttr),
@@ -484,23 +496,22 @@ public class Main {
         saver.setInstances(original);
         saver.writeBatch();
     }
-    
+
     /**
      * validate each models in meta-predictor and writes out performance of each
      * model.
      * @param options 
      */
-    private static void validateMetaPredictor(RunOptions options) 
-    throws Exception {
+    private static void validateMetaPredictor(RunOptions options)
+            throws Exception {
         String inputArff = options.inputArff;
         String outputTxt = options.outputStatistics;
-        
+
         PrintWriter writer = new PrintWriter(
                 new TeeOutputStream(
-                    System.out,
-                    new FileOutputStream(outputTxt)
-                ));
-        
+                System.out,
+                new FileOutputStream(outputTxt)));
+
         System.err.println("Loading data ...");
         Instances dataset = new Instances(new FileReader(inputArff));
         dataset.setClassIndex(dataset.numAttributes() - 1);
@@ -514,51 +525,51 @@ public class Main {
             dataset.sort(idPos);
         }
         Instances orig = dataset;
-        
+
         System.err.println("Check and reduce data space ...");
         String features = loadSelectedAttributes();
         String featureIDs =
                 getIndicesOfSelectedFeatures(dataset, features.split(","));
         dataset = DatasetPreprocessor.selectFeatures(
                 dataset, featureIDs);
-        final double goldenSet[] = 
+        final double goldenSet[] =
                 DatasetPreprocessor.getClassLabels(dataset, dataset.numAttributes() - 1);
-        
+
         MetaPredictor meta = new MetaPredictor();
         BootstrapModelReader reader = new BootstrapModelReader(meta.modelsFile);
         for (int i = 0; i < MetaPredictor.ROUNDS; i++) {
             System.err.println(
                     String.format(
                     "Predicting and evaluating: (%d/%d)",
-                    (i+1), MetaPredictor.ROUNDS));
-            
+                    (i + 1), MetaPredictor.ROUNDS));
+
             MainPredictor predictor = reader.read();
             double[] prediction = predictor.predict(dataset);
-            
+
             QualityMeasure q = new QualityMeasure(orig, goldenSet);
-            
+
             writer.println(
                     String.format(
                     "Performance: %d",
-                    (i+1)));
+                    (i + 1)));
             writer.println(
                     String.format("Q2: %.3f", q.q2(prediction)));
             double[] qtops = q.qtop(prediction);
             writer.println(
-                    String.format("Q-top(%s): %.3f", 
+                    String.format("Q-top(%s): %.3f",
                     dataset.classAttribute().value(0),
                     qtops[0]));
             writer.println(
-                    String.format("Q-top(%s): %.3f", 
+                    String.format("Q-top(%s): %.3f",
                     dataset.classAttribute().value(1),
                     qtops[1]));
             writer.println(
-                String.format("MCC: %.3f", 
+                    String.format("MCC: %.3f",
                     q.mcc(prediction)));
         }
-        
+
         writer.flush();
         writer.close();
-        
+
     }
 }
