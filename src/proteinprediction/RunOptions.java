@@ -110,10 +110,10 @@ class RunOptions {
                 if (args.length > 3) {
                     option.outputFasta = args[3];
                 }
-                if (args.length > 4) {
+                 if(args.length > 4) {
                     option.outConvInFasta = Boolean.parseBoolean(args[4]);
                 }
-                if (args.length > 5) {
+                if(args.length > 5) {
                     option.fastaSeqIn = args[5];
                 }
             } else if (mode.equals(MODE_VALIDATE_META)) {
