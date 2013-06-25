@@ -87,7 +87,7 @@ public class FastaWriter {
                 if (boolSeq) {
                     getSeq(ppName, fastaFile);
                 }
-                for (int i = seq.length(); i < ppSeq.length(); i++) {
+                for (int i = pos; i < ppSeq.length(); i++) {
                     seq += 'X';
                     pred += 'X';
                     conv += 'X';
@@ -123,7 +123,7 @@ public class FastaWriter {
         if (boolSeq) {
             getSeq(ppName, fastaFile);
         }
-        for (int i = seq.length(); i < ppSeq.length(); i++) {
+        for (int i = pos; i < ppSeq.length(); i++) {
             seq += 'X';
             pred += 'X';
             conv += 'X';
