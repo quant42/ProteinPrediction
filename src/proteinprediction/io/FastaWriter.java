@@ -85,12 +85,12 @@ public class FastaWriter {
                 // append missing X
                 String ppSeq = new String();
                 if (boolSeq) {
-                    getSeq(ppName, fastaFile);
-                }
-                for (int i = pos; i < ppSeq.length(); i++) {
-                    seq += 'X';
-                    pred += 'X';
-                    conv += 'X';
+                    ppSeq = getSeq(ppName, fastaFile);
+                    for (int i = pos; i < ppSeq.length(); i++) {
+                        seq += 'X';
+                        pred += 'X';
+                        conv += 'X';
+                    }
                 }
                 // write to file
                 writeProtein(ppName, seq, pred, conv, boolSeq, boolConv);
@@ -121,12 +121,12 @@ public class FastaWriter {
         }
         String ppSeq = new String();
         if (boolSeq) {
-            getSeq(ppName, fastaFile);
-        }
-        for (int i = pos; i < ppSeq.length(); i++) {
-            seq += 'X';
-            pred += 'X';
-            conv += 'X';
+            ppSeq = getSeq(ppName, fastaFile);
+            for (int i = pos; i < ppSeq.length(); i++) {
+                seq += 'X';
+                pred += 'X';
+                conv += 'X';
+            }
         }
         writeProtein(ppName, seq, pred, conv, boolSeq, boolConv);
     }
