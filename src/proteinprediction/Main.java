@@ -83,6 +83,9 @@ public class Main {
             } else if (option.getRunAction() == RunActions.ACTION_VALIDATE_META) {
                 //validate meta predictor
                 validateMetaPredictor(option);
+            } else if (option.getRunAction() == RunActions.ACTION_SUMMARIZE) {
+                //validate meta predictor
+                summarize(option);
             } else {
                 //show help
                 showHelp();
@@ -93,6 +96,13 @@ public class Main {
         }
     }
 
+    /**
+     * Summarize the predictions of all groups to one file
+     */
+    private static void summarize(RunOptions option) {
+        // TODO
+    }
+    
     /**
      * print usage information
      */

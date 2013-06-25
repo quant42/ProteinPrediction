@@ -6,6 +6,7 @@ package proteinprediction;
 
 /**
  * Stores run options
+ *
  * @author Shen Wei
  */
 class RunOptions {
@@ -22,7 +23,8 @@ class RunOptions {
         ACTION_HELP,
         ACTION_TRAIN_META,
         ACTION_PREDICT_META,
-        ACTION_VALIDATE_META
+        ACTION_VALIDATE_META,
+        ACTION_SUMMARIZE
     };
     public static final String MODE_TRAIN = "train";
     public static final String MODE_PREDICT = "predict";
@@ -31,6 +33,7 @@ class RunOptions {
     public static final String MODE_TRAIN_META = "trainMeta";
     public static final String MODE_PREDICT_META = "predictMeta";
     public static final String MODE_VALIDATE_META = "validateMeta";
+    public static final String MODE_SUMMARIZE = "summarize";
     //public static final String MODE_HELP = "|-h|--help|-help|-?|help|";
     /**
      * action to be performed
@@ -46,6 +49,11 @@ class RunOptions {
     public String fastaSeqIn = null;
     public boolean outConvInFasta = false;
     public boolean balanceInput = false;
+    public String membranProteinPrediction;
+    public String membranLoopAndHelix;
+    public String membranInsideOutside;
+    public String membranInnerOuterCell;
+    public String outputSummary;
 
     protected RunOptions() {
         this.features = ProgramSettings.NUM_ATTRS;
@@ -115,6 +123,15 @@ class RunOptions {
                 if (args.length > 3) {
                     option.balanceInput = Boolean.parseBoolean(args[3]);
                 }
+            } else if (mode.equals(MODE_SUMMARIZE)) {
+                option.action = RunActions.ACTION_SUMMARIZE;
+                
+                option.membranProteinPrediction = args[2];
+                option.membranInsideOutside = args[3];
+                option.membranLoopAndHelix = args[4];
+                option.membranInnerOuterCell = args[5];
+                option.outputSummary = args[6];
+                
             } else {
                 option.action = RunActions.ACTION_HELP;
             }
@@ -128,7 +145,8 @@ class RunOptions {
 
     /**
      * get action to be run
-     * @return 
+     *
+     * @return
      */
     public RunActions getRunAction() {
         return action;
@@ -136,7 +154,8 @@ class RunOptions {
 
     /**
      * return usage informations that can be stored in the RunOptions class
-     * @return 
+     *
+     * @return
      */
     public static String getUsageString() {
         StringBuilder sb = new StringBuilder();
@@ -156,6 +175,8 @@ class RunOptions {
         sb.append("    trainMeta <train_set.arff>\n");
         sb.append("    predictMeta <input.arff> <result_output.arff> [output.fasta]\n");
         sb.append("    validateMeta <input.arff> <statistics.txt> [balance_input=false]\n");
+        sb.append("    validateMeta <input.arff> <statistics.txt> [balance_input=false]\n");
+        sb.append("    summarize <proteinPrediction> <insideOutside> <transmembranLoopHelix> <innerOuterCell> <output>\n");
         sb.append("    -h|--help|-help|-?|help\n\n");
 
         sb.append("Examples:\n");
@@ -171,6 +192,9 @@ class RunOptions {
 
         sb.append("* Validate trained model and write validation result into a text file:\n");
         sb.append("    validate validation_set.arff validation_result.txt");
+        
+        sb.append("* Summarize the prediction from all groups to one single file:\n");
+        sb.append("    summarize proteinPrediction.fasta insideOutside.fasta transmembranLoopHelix.fasta innerOuterCell.fasta output");
         return sb.toString();
     }
 }
