@@ -7,6 +7,7 @@ package proteinprediction;
 import proteinprediction.io.FastaWriter;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.RandomAccessFile;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -95,13 +96,6 @@ public class Main {
             e.printStackTrace();
         }
     }
-
-    /**
-     * Summarize the predictions of all groups to one file
-     */
-    private static void summarize(RunOptions option) {
-        // TODO
-    }
     
     /**
      * print usage information
@@ -112,6 +106,32 @@ public class Main {
         System.err.println(RunOptions.getUsageString());
     }
 
+    /**
+     * Summarize the predictions of all groups to one file
+     */
+    private static void summarize(RunOptions option) throws Exception {
+        // read in files
+        System.err.println("Read in prediction files ...");
+        RandomAccessFile prot = new RandomAccessFile(option.membranProteinPrediction, "r");
+        RandomAccessFile innerOuter = new RandomAccessFile(option.membranInnerOuterCell, "r");
+        RandomAccessFile tlh = new RandomAccessFile(option.membranLoopAndHelix, "r");
+        RandomAccessFile insideOut = new RandomAccessFile(option.membranInsideOutside, "r");
+        
+        // predict
+        System.err.println("Predict sequences ...");
+        
+        // write output
+        System.err.println("write to output file ...");
+        
+        
+        // close streams
+        System.err.println("Close streams ...");
+        prot.close();
+        innerOuter.close();
+        tlh.close();
+        insideOut.close();
+    }
+    
     /**
      * perform predictions
      *
