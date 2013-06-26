@@ -34,6 +34,7 @@ public class FastaWriter {
             if (line.startsWith(">")) {
                 if (line.contains(seqId)) {
                     result = bf.readLine();
+                    result = bf.readLine().replaceAll(" ", "");
                     bf.close();
                     return result;
                 }
