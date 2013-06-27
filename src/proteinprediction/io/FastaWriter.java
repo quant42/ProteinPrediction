@@ -28,7 +28,7 @@ public class FastaWriter {
      */
     private String getSeq(String seqId, File fastaFile) throws Exception {
         BufferedReader bf = new BufferedReader(new FileReader(fastaFile));
-        String result = new String(), line;
+        String line;
         while ((line = bf.readLine()) != null) {
             line = line.trim();
             if (line.startsWith(">")) {
@@ -36,14 +36,14 @@ public class FastaWriter {
                     String line1 = bf.readLine();
                     String line2 = bf.readLine();
                     String line3 = bf.readLine();
-                    if(line1 != null) {
-                        line1 = line1.replace(" " , "");
+                    if (line1 != null) {
+                        line1 = line1.replace(" ", "");
                     }
-                    if(line2 != null) {
-                        line2 = line2.replace(" " , "");
+                    if (line2 != null) {
+                        line2 = line2.replace(" ", "");
                     }
-                    if(line3 != null) {
-                        line3 = line3.replace(" " , "");
+                    if (line3 != null) {
+                        line3 = line3.replace(" ", "");
                     }
                     bf.close();
                     if (line3 == null || line3.startsWith(">") || line2.startsWith(">")) {
@@ -55,7 +55,7 @@ public class FastaWriter {
             }
         }
         bf.close();
-        return result;
+        return null;
     }
 
     /**
@@ -78,6 +78,9 @@ public class FastaWriter {
             int pos = Integer.parseInt(ppNamePos.substring(splitPos + 1));
             if (boolSeq) {
                 String l = getSeq(ppName, fastaFile);
+                if (l == null) {
+                    System.err.println(ppName + " not found!");
+                }
                 if (l.length() > pos) {
                     as = l.charAt(pos);
                 } else {
@@ -101,6 +104,9 @@ public class FastaWriter {
                 String ppSeq = new String();
                 if (boolSeq) {
                     ppSeq = getSeq(ppName, fastaFile);
+                    if (ppSeq == null) {
+                        System.err.println(ppName + " not found!");
+                    }
                     for (int i = pos; i < ppSeq.length(); i++) {
                         seq += 'X';
                         pred += 'X';
@@ -137,6 +143,9 @@ public class FastaWriter {
         String ppSeq = new String();
         if (boolSeq) {
             ppSeq = getSeq(ppName, fastaFile);
+            if (ppSeq == null) {
+                System.err.println(ppName + " not found!");
+            }
             for (int i = pos; i < ppSeq.length(); i++) {
                 seq += 'X';
                 pred += 'X';
