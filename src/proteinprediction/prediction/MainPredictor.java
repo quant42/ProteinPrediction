@@ -249,6 +249,18 @@ public class MainPredictor implements Serializable {
     }
     
     /**
+     * get scores for prediction low level
+     *
+     * @return
+     */
+    public double[] getPredictionScores2() {
+        if (this.lowlevelScores.get(0) == null) {
+            throw new IllegalStateException("Prediction not performed!");
+        }
+        return this.lowlevelScores.get(0);
+    }
+    
+    /**
      * get prediction scores of low-level predictors
      *
      * @return

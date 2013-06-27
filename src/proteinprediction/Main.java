@@ -4,6 +4,8 @@
  */
 package proteinprediction;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import proteinprediction.io.FastaWriter;
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import proteinprediction.io.BootstrapModelReader;
 import proteinprediction.prediction.MetaPredictor;
+import proteinprediction.prediction.Summarizer;
 import proteinprediction.utils.evaluation.QualityMeasure;
 
 /**
@@ -117,8 +120,17 @@ public class Main {
         RandomAccessFile tlh = new RandomAccessFile(option.membranLoopAndHelix, "r");
         RandomAccessFile insideOut = new RandomAccessFile(option.membranInsideOutside, "r");
         
+        // create index
+        System.err.println("create an position index of all files ...");
+        HashMap<String, Long> protMap = Summarizer.readPos(prot);
+        HashMap<String, Long> innerOuterMap = Summarizer.readPos(innerOuter);
+        HashMap<String, Long> tlhMap = Summarizer.readPos(tlh);
+        HashMap<String, Long> insideOutMap = Summarizer.readPos(insideOut);
+        
         // predict
         System.err.println("Predict sequences ...");
+        
+        
         
         // write output
         System.err.println("write to output file ...");
@@ -162,6 +174,7 @@ public class Main {
         dataset.setClassIndex(dataset.numAttributes() - 1);
         double[] result = predictor.predict(dataset);
         double[] scores = predictor.getPredictionScores();
+        double[] scores2 = predictor.getPredictionScores2();
 
         System.err.println("Writing results ...");
         // output fasta file
@@ -170,7 +183,7 @@ public class Main {
                 FastaWriter fw = new FastaWriter(new File(
                         ProgramSettings.RESULT_DIR, outputFasta));
                 File fastaIn = (option.fastaSeqIn == null) ? null : new File(option.fastaSeqIn);
-                fw.writeDataset(original, result, fastaIn, scores, option.outConvInFasta);
+                fw.writeDataset(original, result, fastaIn, scores2, option.outConvInFasta);
                 fw.close();
             } catch (Exception e) {
                 System.err.println("Error writing Fasta output!");
@@ -479,21 +492,6 @@ public class Main {
         double[] scores = predictor.getPredictionScores();
 
         System.err.println("Writing results ...");
-        // output fasta file
-//        if (outputFasta != null) {
-//            try {
-//                FastaWriter fw = new FastaWriter(new File(
-//                        ProgramSettings.RESULT_DIR, outputFasta));
-//                File fastaIn = (option.fastaSeqIn == null) ? null : new File(option.fastaSeqIn);
-//                fw.writeDataset(original, result, null, scores2, option.outConvInFasta);
-//                fw.close();
-//                fw.close();
-//            } catch (Exception e) {
-//                System.err.println("Error writing Fasta output!");
-//                System.err.println(e);
-//                e.printStackTrace();
-//            }
-//        }
         // output fasta file
         if (outputFasta != null) {
             try {
