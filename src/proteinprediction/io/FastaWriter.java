@@ -33,11 +33,20 @@ public class FastaWriter {
             line = line.trim();
             if (line.startsWith(">")) {
                 if (line.contains(seqId)) {
-                    String line1 = bf.readLine().replace(" ", "");
-                    String line2 = bf.readLine().replace(" ", "");
+                    String line1 = bf.readLine();
+                    String line2 = bf.readLine();
                     String line3 = bf.readLine();
+                    if(line1 != null) {
+                        line1 = line1.replace(" " , "");
+                    }
+                    if(line2 != null) {
+                        line2 = line2.replace(" " , "");
+                    }
+                    if(line3 != null) {
+                        line3 = line3.replace(" " , "");
+                    }
                     bf.close();
-                    if (line3 == null || line3.startsWith(">")) {
+                    if (line3 == null || line3.startsWith(">") || line2.startsWith(">")) {
                         return line1;
                     } else {
                         return line2;
