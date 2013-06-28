@@ -80,11 +80,12 @@ public class FastaWriter {
                 String l = getSeq(ppName, fastaFile);
                 if (l == null) {
                     System.err.println(ppName + " not found!");
-                }
-                if (l.length() > pos) {
-                    as = l.charAt(pos);
                 } else {
-                    as = ' ';
+                    if (l.length() > pos) {
+                        as = l.charAt(pos);
+                    } else {
+                        as = ' ';
+                    }
                 }
             }
             fasta.add(new Data(ppName, pos, as, ((String) vec.elementAt((int) prediction[i])).charAt(0), scores[i]));
@@ -165,7 +166,7 @@ public class FastaWriter {
      */
     public void writeProtein(String name, String seq, String prediction, String conv, boolean boolSeq, boolean boolConv) throws Exception {
         out.write(">" + name + "\n");
-        if (boolSeq) {
+        if (boolSeq || seq != null) {
             out.write(seq + "\n");
         }
         out.write(prediction + "\n");
