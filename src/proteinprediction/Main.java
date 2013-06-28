@@ -31,6 +31,8 @@ import proteinprediction.io.BootstrapModelReader;
 import proteinprediction.prediction.MetaPredictor;
 import proteinprediction.prediction.Summarizer;
 import proteinprediction.utils.evaluation.QualityMeasure;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Entry point of predictors
@@ -99,7 +101,7 @@ public class Main {
             e.printStackTrace();
         }
     }
-    
+
     /**
      * print usage information
      */
@@ -119,7 +121,7 @@ public class Main {
         RandomAccessFile innerOuter = new RandomAccessFile(option.membranInnerOuterCell, "r");
         RandomAccessFile tlh = new RandomAccessFile(option.membranLoopAndHelix, "r");
         RandomAccessFile insideOut = new RandomAccessFile(option.membranInsideOutside, "r");
-        
+
         // create index
         System.err.println("create an position index of all files ...");
         HashMap<String, Long> protMap = Summarizer.readPos(prot);
@@ -127,15 +129,38 @@ public class Main {
         HashMap<String, Long> tlhMap = Summarizer.readPos(tlh);
         HashMap<String, Long> insideOutMap = Summarizer.readPos(insideOut);
         
-        // predict
-        System.err.println("Predict sequences ...");
+        // summerize indizes
+        System.err.println("Summarize indizes ...");
+        HashMap<String, proteinprediction.prediction.SummarizedPrediction> proteinSet = Summarizer.summarizeHashMaps(protMap, innerOuterMap, tlhMap, insideOutMap,
+                prot, innerOuter, tlh, insideOut);
         
-        
-        
+        // predict 
+        // for (Map.Entry<String, Object> cursor : map.entrySet()) {...}
+//        HashMap<String, String> prediction = new HashMap<String, String>();
+//        System.err.println("Predict sequences ...");
+//        Iterator it = protMap.entrySet().iterator();
+//        while (it.hasNext()) {
+//            Map.Entry pairs = (Map.Entry) it.next();
+//            String key = (String) pairs.getKey();
+//            Long pos = (Long) pairs.getValue();
+//            // get everything
+//            String seq = Summarizer.seqReader(tlh, key);
+//            String isProtein = Summarizer.reader(prot, pos);
+//            String isInMembran = Summarizer.seqReader(innerOuter, isInMembran.get(key));
+//            String tmhtml = Summarizer.seqReader(tlh, tmhtml.get(key));
+//            String insideOutside = Summarizer.seqReader(insideOut, insideOutside.get(key));
+//            if(isProtein != null && isInMembran != null && tmhtml != null && insideOutside != null) {
+//                prediction.put(key, Summarizer.predict(seq, isProtein, isInMembran, tmhtml, insideOutside));
+//            }
+//            //prediction.put(, );
+//            it.remove(); // avoids a ConcurrentModificationException
+//        }
+
+
         // write output
         System.err.println("write to output file ...");
-        
-        
+
+
         // close streams
         System.err.println("Close streams ...");
         prot.close();
@@ -143,7 +168,7 @@ public class Main {
         tlh.close();
         insideOut.close();
     }
-    
+
     /**
      * perform predictions
      *
@@ -528,7 +553,8 @@ public class Main {
     /**
      * validate each models in meta-predictor and writes out performance of each
      * model.
-     * @param options 
+     *
+     * @param options
      */
     private static void validateMetaPredictor(RunOptions options)
             throws Exception {

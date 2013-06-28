@@ -2,6 +2,7 @@ package proteinprediction.prediction;
 
 import java.util.HashMap;
 import java.io.RandomAccessFile;
+import java.util.Map;
 
 /**
  *
@@ -28,6 +29,25 @@ public class Summarizer {
             cSeek = f.getFilePointer();
         }
         f.seek(filePos);
+        return result;
+    }
+    
+    /**
+     * Summerizes Hashmaps
+     * 
+     * @param protMap
+     * @param innerOuterMap
+     * @param tlhMap
+     * @param insideOutMap
+     * @return 
+     */
+    public static HashMap<String, SummarizedPrediction> summarizeHashMaps(HashMap<String, Long> protMap, HashMap<String, Long> innerOuterMap, HashMap<String, Long> tlhMap, HashMap<String, Long> insideOutMap,
+            RandomAccessFile prot, RandomAccessFile innerOuter, RandomAccessFile tlh, RandomAccessFile insideOut) {
+        HashMap<String, SummarizedPrediction> result = new HashMap<String, SummarizedPrediction>();
+        for (Map.Entry<String, Long> cObject : protMap.entrySet()) {
+            String key = cObject.getKey();
+            Long valProt = cObject.getValue();
+        }
         return result;
     }
     
