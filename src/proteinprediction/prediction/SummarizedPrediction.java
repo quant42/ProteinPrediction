@@ -170,7 +170,7 @@ public class SummarizedPrediction {
                     if (prediction[i] == 'i') {
                         int score = 0;
                         int down = -1, up = -1;
-                        for (int j = i - 1; j >= 0; j++) {
+                        for (int j = i - 1; j >= 0; j--) {
                             if (prediction[j] == 'i') {
                                 score++;
                             } else {
@@ -178,7 +178,7 @@ public class SummarizedPrediction {
                                 break;
                             }
                         }
-                        for (int j = i + 1; j < this.inMembran.length; i++) {
+                        for (int j = i + 1; j < this.inMembran.length; j++) {
                             if (prediction[j] == 'i') {
                                 score++;
                             } else {
@@ -238,12 +238,75 @@ public class SummarizedPrediction {
                 predicted[i] = false;
             }
             // now transmembran loop helix
-            int c = 0;
-            for (int i = 0; i < this.inMembran.length - 1; i++) {
+            for (int i = 0; i < this.inMembran.length; i++) {
+                // find 'i' regions
                 if (prediction[i] == 'i') {
+                    // how long is this region?
+                    int score = 0;
+                    for (int j = i; j < this.inMembran.length; j++) {
+                        if (prediction[j] != 'i') {
+                            break;
+                        }
+                        score++;
+                    }
+                    if (score >= 10) {
+                        // H
+                        for (int j = i; j < this.inMembran.length; j++) {
+                            if (prediction[j] != 'i') {
+                                break;
+                            }
+                            prediction[j] = 'H';
+                        }
+                    } else {
+                        // L
+                        for (int j = i; j < this.inMembran.length; j++) {
+                            if (prediction[j] != 'i') {
+                                break;
+                            }
+                            prediction[j] = 'L';
+                        }
+                    }
                 }
             }
             // now inside or outside cell
+            boolean existOutside = false;
+            for (int i = 0; i < this.inMembran.length; i++) {
+                if (prediction[i] == 'o') {
+                    existOutside = true;
+                    break;
+                }
+            }
+            if (existOutside) {
+                // get highest score
+                int pos = -1;
+                while (pos == -1 || prediction[pos] != 'o') {
+                    pos = highestIndex(this.insideOutsideConv);
+                    this.insideOutsideConv[pos] = -1;   // don't get on it double!!!
+                }
+                prediction[pos] = (this.insideOutside[pos] == 'i') ? 'I' : 'O';
+                // extend area
+                boolean turn = false, flag = false;
+                for (int i = pos - 1; i >= 0; i--) {
+                    if (prediction[i] == 'o') {
+                        prediction[pos] = (turn) ? ((this.insideOutside[pos] == 'i') ? 'I' : 'O') : ((this.insideOutside[pos] == 'i') ? 'O' : 'I');
+                        flag = false;
+                    } else if (prediction[i] == 'H' && !flag) {
+                        turn = !turn;
+                        flag = true;
+                    }
+                }
+                turn = false;
+                flag = false;
+                for (int i = pos + 1; i < this.insideOutside.length; i++) {
+                    if (prediction[i] == 'o') {
+                        prediction[pos] = (turn) ? ((this.insideOutside[pos] == 'i') ? 'I' : 'O') : ((this.insideOutside[pos] == 'i') ? 'O' : 'I');
+                        flag = false;
+                    } else if (prediction[i] == 'H' && !flag) {
+                        turn = !turn;
+                        flag = true;
+                    }
+                }
+            }
         }
         // ---
         this.prediction = prediction;
@@ -275,6 +338,16 @@ public class SummarizedPrediction {
             }
         }
         return true;
+    }
+
+    public static int highestIndex(double[] score) {
+        int result = 0;
+        for (int i = 1; i < score.length; i++) {
+            if (score[i] > score[result]) {
+                result = i;
+            }
+        }
+        return result;
     }
 
     @Override
