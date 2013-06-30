@@ -242,8 +242,14 @@ public class SummarizedPrediction {
             for (int i = 0; i < predicted.length; i++) {
                 predicted[i] = false;
             }
-            // now transmembran loop helix cellside
-            
+            // now transmembran loop helix
+            int c = 0;
+            for(int i = 0; i < this.inMembran.length - 1; i++) {
+                if(prediction[i] == 'i') {
+                    
+                }
+            }
+            // now inside or outside cell
         }
         // ---
         this.prediction = prediction;
