@@ -41,14 +41,35 @@ public class Summarizer {
      * @param insideOutMap
      * @return 
      */
-    public static HashMap<String, SummarizedPrediction> summarizeHashMaps(HashMap<String, Long> protMap, HashMap<String, Long> innerOuterMap, HashMap<String, Long> tlhMap, HashMap<String, Long> insideOutMap,
-            RandomAccessFile prot, RandomAccessFile innerOuter, RandomAccessFile tlh, RandomAccessFile insideOut) {
+    public static HashMap<String, SummarizedPrediction> summarizeHashMaps(HashMap<String, Long> protMap, HashMap<String, Long> innerOuterMap,
+            HashMap<String, Long> tlhMap, HashMap<String, Long> insideOutMap, RandomAccessFile prot, RandomAccessFile innerOuter,
+            RandomAccessFile tlh, RandomAccessFile insideOut) throws Exception {
         HashMap<String, SummarizedPrediction> result = new HashMap<String, SummarizedPrediction>();
         for (Map.Entry<String, Long> cObject : protMap.entrySet()) {
-            String key = cObject.getKey();
-            Long valProt = cObject.getValue();
+            String id = cObject.getKey();
+            Long isMembranProtPos = cObject.getValue();
+            Long innerOuterMembranPos = innerOuterMap.get(id);
+            Long tlhtmlPos = tlhMap.get(id);
+            Long insideOutPos = insideOutMap.get(id);
+            if(isMembranProtPos != null && innerOuterMembranPos != null && tlhtmlPos != null && insideOutPos != null) {
+                result.put(id, new SummarizedPrediction(id, readProt(prot, isMembranProtPos), readProt(innerOuter, innerOuterMembranPos),
+                        readProt(insideOut, insideOutPos), readProt(tlh, tlhtmlPos)));
+            }
         }
         return result;
     }
     
+    public static String readProt(RandomAccessFile f, long l) throws Exception {
+        StringBuilder result = new StringBuilder();
+        f.seek(l);
+        result.append(f.readLine());
+        String line;
+        while((line = f.readLine()) != null) {
+            if(line.trim().startsWith(">")) {
+                break;
+            }
+            result.append("\n").append(line);
+        }
+        return result.toString();
+    }
 }

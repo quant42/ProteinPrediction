@@ -33,6 +33,10 @@ import proteinprediction.prediction.Summarizer;
 import proteinprediction.utils.evaluation.QualityMeasure;
 import java.util.Iterator;
 import java.util.Map;
+import proteinprediction.prediction.SummarizedPrediction;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+
 
 /**
  * Entry point of predictors
@@ -131,35 +135,21 @@ public class Main {
         
         // summerize indizes
         System.err.println("Summarize indizes ...");
-        HashMap<String, proteinprediction.prediction.SummarizedPrediction> proteinSet = Summarizer.summarizeHashMaps(protMap, innerOuterMap, tlhMap, insideOutMap,
+        HashMap<String, SummarizedPrediction> proteinSet = Summarizer.summarizeHashMaps(protMap, innerOuterMap, tlhMap, insideOutMap,
                 prot, innerOuter, tlh, insideOut);
         
-        // predict 
-        // for (Map.Entry<String, Object> cursor : map.entrySet()) {...}
-//        HashMap<String, String> prediction = new HashMap<String, String>();
-//        System.err.println("Predict sequences ...");
-//        Iterator it = protMap.entrySet().iterator();
-//        while (it.hasNext()) {
-//            Map.Entry pairs = (Map.Entry) it.next();
-//            String key = (String) pairs.getKey();
-//            Long pos = (Long) pairs.getValue();
-//            // get everything
-//            String seq = Summarizer.seqReader(tlh, key);
-//            String isProtein = Summarizer.reader(prot, pos);
-//            String isInMembran = Summarizer.seqReader(innerOuter, isInMembran.get(key));
-//            String tmhtml = Summarizer.seqReader(tlh, tmhtml.get(key));
-//            String insideOutside = Summarizer.seqReader(insideOut, insideOutside.get(key));
-//            if(isProtein != null && isInMembran != null && tmhtml != null && insideOutside != null) {
-//                prediction.put(key, Summarizer.predict(seq, isProtein, isInMembran, tmhtml, insideOutside));
-//            }
-//            //prediction.put(, );
-//            it.remove(); // avoids a ConcurrentModificationException
-//        }
-
-
+        // predict
+        for(Map.Entry<String, SummarizedPrediction> c: proteinSet.entrySet()) {
+            c.getValue().predict();
+        }
+        
         // write output
-        System.err.println("write to output file ...");
-
+        System.err.println("write results to output file ...");
+        BufferedWriter bf = new BufferedWriter(new FileWriter(option.outputSummary));
+        for(Map.Entry<String, SummarizedPrediction> c: proteinSet.entrySet()) {
+            bf.write(c.getValue().toString());
+        }
+        bf.close();
 
         // close streams
         System.err.println("Close streams ...");
