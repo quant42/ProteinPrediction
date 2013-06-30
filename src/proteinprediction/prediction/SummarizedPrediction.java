@@ -109,20 +109,20 @@ public class SummarizedPrediction {
             boolean changed = false;
             do {
                 changed = false;
-                boolean flag = false;
                 for (int i = 1; i < this.inMembran.length - 1; i++) {
-                    if (!predicted[i] && !flag && this.inMembran[i - 1] == '-' && this.inMembran[i + 1] == '-' && this.inMembran[i] == '-' && this.inMembranConv[i] >= 0.3) {
+                    if (predicted[i]) {
+                        continue;
+                    }
+                    if (this.inMembran[i - 1] == '-' && this.inMembran[i + 1] == '-' && this.inMembran[i] == '-' && this.inMembranConv[i] >= 0.3) {
                         prediction[i] = 'o';
                         predictionConv[i] = 0.5;
                         predicted[i] = true;
                         changed = true;
-                    } else if (!predicted[i] && !flag && this.inMembran[i - 1] == '+' && this.inMembran[i + 1] == '+' && this.inMembran[i] == '+' && this.inMembranConv[i] >= 0.3) {
+                    } else if (this.inMembran[i - 1] == '+' && this.inMembran[i + 1] == '+' && this.inMembran[i] == '+' && this.inMembranConv[i] >= 0.3) {
                         prediction[i] = 'i';
                         predictionConv[i] = 0.5;
                         predicted[i] = true;
                         changed = true;
-                    } else {
-                        flag = false;
                     }
                 }
             } while (changed);
@@ -151,11 +151,9 @@ public class SummarizedPrediction {
                             } else {
                                 prediction[i] = 'o';
                             }
-
                         } else {
                             prediction[i] = 'o';
                         }
-                        prediction[i] = (this.inMembran[i] == '+') ? 'i' : 'o';
                         predictionConv[i] = 0.4;
                         predicted[i] = true;
                     } else {
@@ -166,7 +164,6 @@ public class SummarizedPrediction {
                 }
             }
             // now check rest
-            changed = false;
             do {
                 changed = false;
                 for (int i = 0; i < this.inMembran.length - 1; i++) {
@@ -189,42 +186,39 @@ public class SummarizedPrediction {
                                 break;
                             }
                         }
-                        if (score >= 5) {
-                            changed = true;
-                            // append at lowest
-                            if (down == -1 && up < this.inMembran.length) {
-                                prediction[up] = 'i';
-                                predictionConv[up] = 0.3;
-                                predicted[up] = true;
-                            } else if (up == -1 && down >= 0) {
-                                prediction[down] = 'i';
-                                predictionConv[down] = 0.3;
-                                predicted[down] = true;
-                            } else if (down >= 0 && up < this.inMembran.length) {
-                                if (this.inMembran[down] == '+' && this.inMembran[up] == '-') {
+                        // tmh residue is likely to has a length of at least 4
+                        if (score <= 4 && up < this.inMembran.length && up != -1 && down >= 0) {
+                            if (!predicted[up] || !predicted[down]) {
+                                // append at lowest
+                                if (this.inMembran[down] == '+' && this.inMembran[up] == '-' && !predicted[down]) {
                                     prediction[down] = 'i';
                                     predictionConv[down] = 0.3;
                                     predicted[down] = true;
-                                } else if (this.inMembran[down] == '-' && this.inMembran[up] == '+') {
+                                    changed = true;
+                                } else if (this.inMembran[down] == '-' && this.inMembran[up] == '+' && !predicted[up]) {
                                     prediction[up] = 'i';
                                     predictionConv[up] = 0.3;
                                     predicted[up] = true;
-                                } else if (this.inMembran[down] == '+' && this.inMembran[up] == '+') {
+                                    changed = true;
+                                } else if (this.inMembran[down] == '+' && this.inMembran[up] == '+' && !predicted[down] && !predicted[up]) {
                                     prediction[down] = 'i';
                                     predictionConv[down] = 0.3;
                                     predicted[down] = true;
                                     prediction[up] = 'i';
                                     predictionConv[up] = 0.3;
                                     predicted[up] = true;
+                                    changed = true;
                                 } else {
-                                    if (this.inMembranConv[down] > this.inMembranConv[up]) {
+                                    if (this.inMembranConv[down] > this.inMembranConv[up] && !predicted[up]) {
                                         prediction[up] = 'i';
                                         predictionConv[up] = 0.3;
                                         predicted[up] = true;
-                                    } else {
+                                        changed = true;
+                                    } else if (!predicted[down]) {
                                         prediction[down] = 'i';
                                         predictionConv[down] = 0.3;
                                         predicted[down] = true;
+                                        changed = true;
                                     }
                                 }
                             }
@@ -232,8 +226,9 @@ public class SummarizedPrediction {
                     }
                 }
             } while (changed);
-            for(int i = 0; i < predicted.length; i++) {
-                if(predicted[i] = false) {
+            // set rest to 'o'
+            for (int i = 0; i < predicted.length; i++) {
+                if (predicted[i] = false) {
                     prediction[i] = 'o';
                     predictionConv[i] = 0.1;
                 }
@@ -244,9 +239,8 @@ public class SummarizedPrediction {
             }
             // now transmembran loop helix
             int c = 0;
-            for(int i = 0; i < this.inMembran.length - 1; i++) {
-                if(prediction[i] == 'i') {
-                    
+            for (int i = 0; i < this.inMembran.length - 1; i++) {
+                if (prediction[i] == 'i') {
                 }
             }
             // now inside or outside cell
