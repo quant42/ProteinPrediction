@@ -47,6 +47,7 @@ public class Summarizer {
         HashMap<String, SummarizedPrediction> result = new HashMap<String, SummarizedPrediction>();
         for (Map.Entry<String, Long> cObject : protMap.entrySet()) {
             String id = cObject.getKey();
+//            System.out.println(" search for: " + id);
             Long isMembranProtPos = cObject.getValue();
             Long innerOuterMembranPos = innerOuterMap.get(id);
             Long tlhtmlPos = tlhMap.get(id);

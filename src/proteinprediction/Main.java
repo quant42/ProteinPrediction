@@ -132,6 +132,7 @@ public class Main {
         HashMap<String, Long> innerOuterMap = Summarizer.readPos(innerOuter);
         HashMap<String, Long> tlhMap = Summarizer.readPos(tlh);
         HashMap<String, Long> insideOutMap = Summarizer.readPos(insideOut);
+//        System.out.println(protMap.size() + " " + innerOuterMap.size() + " " + tlhMap.size() + " " + insideOutMap.size());
         
         // summerize indizes
         System.err.println("Summarize indizes ...");
@@ -139,6 +140,7 @@ public class Main {
                 prot, innerOuter, tlh, insideOut);
         
         // predict
+        System.err.println("Predict ...");
         for(Map.Entry<String, SummarizedPrediction> c: proteinSet.entrySet()) {
             c.getValue().predict();
         }

@@ -24,6 +24,7 @@ public class SummarizedPrediction {
 
     public SummarizedPrediction(String id, String seq, boolean isMembranProtein, double isMembranProtConv, char[] inMembran, double[] inMembranConv,
             char[] insideOutside, double[] insideOutsideConv, char[] tmhTml, double[] tmhtmlConv) {
+        this.id = id;
         this.seq = seq;
         this.isMembranProtein = isMembranProtein;
         this.isMembranProtConv = isMembranProtConv;
@@ -42,10 +43,12 @@ public class SummarizedPrediction {
                 parse09Conv(tmhtmlConv));
     }
 
-    public SummarizedPrediction(String id, String membranProtein, String inMembran, String insideOutside, String tmhTml) {
-        this(id, (inMembran.split("\n").length == 4) ? inMembran.split("\n")[1] : (tmhTml.split("\n").length == 4) ? tmhTml.split("\n")[1] : "unknown seq!",
+    public SummarizedPrediction(String id, String membranProtein, String insideOutside, String inMembran, String tmhTml) {
+        this(id,
+                (inMembran.split("\n").length == 4) ? inMembran.split("\n")[1] : (tmhTml.split("\n").length == 4) ? tmhTml.split("\n")[1] : "unknown seq!",
                 membranProtein.split("\n")[1], membranProtein.split("\n")[1],
-                (inMembran.split("\n").length == 4) ? inMembran.split("\n")[2] : inMembran.split("\n")[1], (inMembran.split("\n").length == 4) ? inMembran.split("\n")[3] : inMembran.split("\n")[2],
+                (inMembran.split("\n").length == 4) ? inMembran.split("\n")[2] : inMembran.split("\n")[1],
+                (inMembran.split("\n").length == 4) ? inMembran.split("\n")[3] : inMembran.split("\n")[2],
                 insideOutside.split("\n")[1], insideOutside.split("\n")[2],
                 (tmhTml.split("\n").length == 4) ? tmhTml.split("\n")[2] : tmhTml.split("\n")[1], (tmhTml.split("\n").length == 4) ? tmhTml.split("\n")[3] : tmhTml.split("\n")[2]);
     }
@@ -53,7 +56,7 @@ public class SummarizedPrediction {
     public static double[] parseCommaConv(String s) {
         String[] s_ = s.split(";");
         double[] result = new double[s_.length];
-        for (int i = 0; i < s.length(); i++) {
+        for (int i = 0; i < s_.length; i++) {
             result[i] = Double.parseDouble(s_[i]);
         }
         return result;
@@ -74,7 +77,7 @@ public class SummarizedPrediction {
         boolean[] predicted = new boolean[insideOutside.length];
         for (int i = 0; i < predicted.length; i++) {
             prediction[i] = 'N';
-            predictionConv[i] = '0';
+            predictionConv[i] = 0;
             predicted[i] = false;
         }
         // --- for all membran proteins
@@ -356,15 +359,26 @@ public class SummarizedPrediction {
         bf.append('>').append(this.id).append("\n");
         bf.append(this.seq).append("\n");
         bf.append(this.prediction).append("\n");
-        bf.append(this.predictionConv).append("\n");
-        bf.append(this.isMembranProtein).append("\n");
-        bf.append(this.isMembranProtConv).append("\n");
+        bf.append(doubleToChar(this.predictionConv)).append("\n");
+        bf.append((this.isMembranProtein)?'+':'-').append('\t').append(this.isMembranProtConv).append("\n");
         bf.append(this.inMembran).append("\n");
-        bf.append(this.inMembranConv).append("\n");
+        bf.append(doubleToChar(this.inMembranConv)).append("\n");
         bf.append(this.insideOutside).append("\n");
-        bf.append(this.insideOutsideConv).append("\n");
+        bf.append(doubleToChar(this.insideOutsideConv)).append("\n");
         bf.append(this.tmhTml).append("\n");
-        bf.append(this.tmhtmlConv).append("\n");
+        bf.append(doubleToChar(this.tmhtmlConv)).append("\n");
         return bf.toString();
+    }
+    
+    public static char[] doubleToChar(double[] s) {
+        char[] result = new char[s.length];
+        for(int i = 0; i < result.length; i++) {
+            int k = (int) Math.round(s[i] * 10);
+            if(k == 10) {
+                k = 9;
+            }
+            result[i] = (char) (k + 48);
+        }
+        return result;
     }
 }

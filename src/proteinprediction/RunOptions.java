@@ -126,11 +126,11 @@ class RunOptions {
             } else if (mode.equals(MODE_SUMMARIZE)) {
                 option.action = RunActions.ACTION_SUMMARIZE;
                 
-                option.membranProteinPrediction = args[2];
-                option.membranInsideOutside = args[3];
-                option.membranLoopAndHelix = args[4];
-                option.membranInnerOuterCell = args[5];
-                option.outputSummary = args[6];
+                option.membranProteinPrediction = args[1];
+                option.membranInsideOutside = args[2];
+                option.membranLoopAndHelix = args[3];
+                option.membranInnerOuterCell = args[4];
+                option.outputSummary = args[5];
                 
             } else {
                 option.action = RunActions.ACTION_HELP;
