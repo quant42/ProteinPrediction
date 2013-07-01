@@ -132,12 +132,17 @@ public class Main {
         HashMap<String, Long> innerOuterMap = Summarizer.readPos(innerOuter);
         HashMap<String, Long> tlhMap = Summarizer.readPos(tlh);
         HashMap<String, Long> insideOutMap = Summarizer.readPos(insideOut);
-//        System.out.println(protMap.size() + " " + innerOuterMap.size() + " " + tlhMap.size() + " " + insideOutMap.size());
+        System.err.println(" found predictions:");
+        System.err.println(" isMembranProteinOrNot: " + protMap.size());
+        System.err.println(" isInMembranOrNot: " + innerOuterMap.size());
+        System.err.println(" isTransmembranLoopOrHelix: " + tlhMap.size());
+        System.err.println(" isInsideOrOutsideOfCell: " + insideOutMap.size());
         
         // summerize indizes
         System.err.println("Summarize indizes ...");
         HashMap<String, SummarizedPrediction> proteinSet = Summarizer.summarizeHashMaps(protMap, innerOuterMap, tlhMap, insideOutMap,
                 prot, innerOuter, tlh, insideOut);
+        System.err.println(" nr. of proteins to metapredict: " + proteinSet.size());
         
         // predict
         System.err.println("Predict ...");
