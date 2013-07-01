@@ -39,13 +39,13 @@ public class SummarizedPrediction {
     public SummarizedPrediction(String id, String seq, String isMembranProtein, String isMembranProtConv, String inMembran, String inMembranConv,
             String insideOutside, String insideOutsideConv, String tmhTml, String tmhtmlConv) {
         this(id, seq, isMembranProtein.charAt(0) == '+', Double.parseDouble(isMembranProtConv.split("\t")[isMembranProtConv.split("\t").length - 1]),
-                inMembran.toCharArray(), parse09Conv(inMembranConv), insideOutside.toCharArray(), parseCommaConv(insideOutsideConv), tmhTml.toCharArray(),
+                inMembran.replace("f", "").toCharArray(), parse09Conv(inMembranConv.replace("n", "")), insideOutside.toCharArray(), parseCommaConv(insideOutsideConv), tmhTml.toCharArray(),
                 parse09Conv(tmhtmlConv));
     }
 
     public SummarizedPrediction(String id, String membranProtein, String insideOutside, String inMembran, String tmhTml) {
         this(id,
-                (inMembran.split("\n").length == 4) ? inMembran.split("\n")[1] : (tmhTml.split("\n").length == 4) ? tmhTml.split("\n")[1] : "unknown seq!",
+                (tmhTml.split("\n").length == 4) ? tmhTml.split("\n")[1] : (inMembran.split("\n").length == 4) ? inMembran.split("\n")[1] : "unknown seq!",
                 membranProtein.split("\n")[1], membranProtein.split("\n")[1],
                 (inMembran.split("\n").length == 4) ? inMembran.split("\n")[2] : inMembran.split("\n")[1],
                 (inMembran.split("\n").length == 4) ? inMembran.split("\n")[3] : inMembran.split("\n")[2],
@@ -81,17 +81,19 @@ public class SummarizedPrediction {
             predicted[i] = false;
         }
         // --- for all membran proteins
-        if (this.isMembranProtein || (!this.isMembranProtein && this.isMembranProtConv > 0.1 && containsLongInsideMembranRegion())) {
+        if (this.isMembranProtein) {
             // first find inside membran regions
             for (int i = 0; i < this.inMembran.length; i++) {
                 // take as outside membran
-                if (this.inMembran[i] == '-' && this.inMembranConv[i] >= 0.9 && tmhTml[i] == 'H') {
+                if (this.inMembran[i] == '-' && this.inMembranConv[i] >= 0.6 && tmhTml[i] == 'H') {
                     prediction[i] = 'o';
                     predictionConv[i] = 0.9;
                     predicted[i] = true;
-                }
-                // take as inside
-                if ((this.inMembran[i] == '+' && this.inMembranConv[i] >= 0.7) || (this.tmhTml[i] == 'L' && this.inMembran[i] == '+')) {
+                } // take as inside
+                else if ((this.inMembran[i] == '+'
+                        && this.inMembranConv[i] >= 0.4)
+                        || (this.tmhTml[i] == 'L'
+                        && this.inMembran[i] == '+')) {
                     prediction[i] = 'i';
                     predictionConv[i] = 0.8;
                     predicted[i] = true;
@@ -231,8 +233,14 @@ public class SummarizedPrediction {
             } while (changed);
             // set rest to 'o'
             for (int i = 0; i < predicted.length; i++) {
-                if (predicted[i] = false) {
+                if (predicted[i] == false) {
                     prediction[i] = 'o';
+                    predictionConv[i] = 0.1;
+                }
+            }
+            for (int i = 0; i < predicted.length; i++) {
+                if (prediction[i] == 'N') {
+                    prediction[i] = 'i';
                     predictionConv[i] = 0.1;
                 }
             }
@@ -245,14 +253,17 @@ public class SummarizedPrediction {
                 // find 'i' regions
                 if (prediction[i] == 'i') {
                     // how long is this region?
-                    int score = 0;
+                    int score = 0, scoreL = 0;
                     for (int j = i; j < this.inMembran.length; j++) {
                         if (prediction[j] != 'i') {
                             break;
                         }
                         score++;
+                        if (this.tmhTml[i] == 'L') {
+                            scoreL++;
+                        }
                     }
-                    if (score >= 10) {
+                    if (score >= 15 && !(scoreL >= 5)) {
                         // H
                         for (int j = i; j < this.inMembran.length; j++) {
                             if (prediction[j] != 'i') {
@@ -282,30 +293,33 @@ public class SummarizedPrediction {
             if (existOutside) {
                 // get highest score
                 int pos = -1;
+                double insideOutsideConvCopy[] = new double[this.insideOutsideConv.length];
+                System.arraycopy(this.insideOutsideConv, 0, insideOutsideConvCopy, 0, this.insideOutsideConv.length);
                 while (pos == -1 || prediction[pos] != 'o') {
-                    pos = highestIndex(this.insideOutsideConv);
-                    this.insideOutsideConv[pos] = -1;   // don't get on it double!!!
+                    pos = highestIndex(insideOutsideConvCopy);
+                    insideOutsideConvCopy[pos] = -1;   // don't get on it double!!!
                 }
-                prediction[pos] = (this.insideOutside[pos] == 'i') ? 'I' : 'O';
+                boolean predInside = (this.insideOutside[pos] == 'i') ? true : false;
+                prediction[pos] = (predInside) ? 'I' : 'O';
                 // extend area
-                boolean turn = false, flag = false;
+                boolean flag = false;
                 for (int i = pos - 1; i >= 0; i--) {
                     if (prediction[i] == 'o') {
-                        prediction[pos] = (turn) ? ((this.insideOutside[pos] == 'i') ? 'I' : 'O') : ((this.insideOutside[pos] == 'i') ? 'O' : 'I');
+                        prediction[i] = (predInside) ? 'I' : 'O';
                         flag = false;
                     } else if (prediction[i] == 'H' && !flag) {
-                        turn = !turn;
+                        predInside = !predInside;
                         flag = true;
                     }
                 }
-                turn = false;
+                predInside = (this.insideOutside[pos] == 'i') ? true : false;
                 flag = false;
                 for (int i = pos + 1; i < this.insideOutside.length; i++) {
                     if (prediction[i] == 'o') {
-                        prediction[pos] = (turn) ? ((this.insideOutside[pos] == 'i') ? 'I' : 'O') : ((this.insideOutside[pos] == 'i') ? 'O' : 'I');
+                        prediction[i] = (predInside) ? 'I' : 'O';
                         flag = false;
                     } else if (prediction[i] == 'H' && !flag) {
-                        turn = !turn;
+                        predInside = !predInside;
                         flag = true;
                     }
                 }
@@ -314,24 +328,6 @@ public class SummarizedPrediction {
         // ---
         this.prediction = prediction;
         this.predictionConv = predictionConv;
-    }
-
-    public boolean containsLongInsideMembranRegion() {
-        int score = 0, rscore = 0;
-        for (int i = 0; i < this.inMembran.length; i++) {
-            if (rscore > 0) {
-                rscore += this.inMembran[i] == '+' ? 1 : -1;
-            } else {
-                rscore = this.inMembran[i] == '+' ? 1 : -1;
-            }
-            if (rscore > score) {
-                score = rscore;
-            }
-        }
-        if (score > 14) {
-            return true;
-        }
-        return false;
     }
 
     public static boolean allTrue(boolean[] arr) {
@@ -360,7 +356,7 @@ public class SummarizedPrediction {
         bf.append(this.seq).append("\n");
         bf.append(this.prediction).append("\n");
         bf.append(doubleToChar(this.predictionConv)).append("\n");
-        bf.append((this.isMembranProtein)?'+':'-').append('\t').append(this.isMembranProtConv).append("\n");
+        bf.append((this.isMembranProtein) ? '+' : '-').append('\t').append(this.isMembranProtConv).append("\n");
         bf.append(this.inMembran).append("\n");
         bf.append(doubleToChar(this.inMembranConv)).append("\n");
         bf.append(this.insideOutside).append("\n");
@@ -369,12 +365,12 @@ public class SummarizedPrediction {
         bf.append(doubleToChar(this.tmhtmlConv)).append("\n");
         return bf.toString();
     }
-    
+
     public static char[] doubleToChar(double[] s) {
         char[] result = new char[s.length];
-        for(int i = 0; i < result.length; i++) {
+        for (int i = 0; i < result.length; i++) {
             int k = (int) Math.round(s[i] * 10);
-            if(k == 10) {
+            if (k >= 10) {
                 k = 9;
             }
             result[i] = (char) (k + 48);
